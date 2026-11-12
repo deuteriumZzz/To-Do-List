@@ -8,6 +8,8 @@
 
 Plan your days in a notebook-style app: a calendar, a productivity report, quick add that understands plain text, and a mascot with opinions. Everything lives in your browser. No account, no server.
 
+**[Live demo: tikleproject.vercel.app](https://tikleproject.vercel.app)**
+
 [English](README.md) · [Русский](README.ru.md)
 
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)

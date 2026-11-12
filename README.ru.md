@@ -8,6 +8,8 @@
 
 Планируйте дни в приложении в стиле блокнота: календарь, отчёт о продуктивности, быстрый ввод, который понимает обычный текст, и талисман с характером. Всё хранится в вашем браузере. Без аккаунта и без сервера.
 
+**[Демо онлайн: tikleproject.vercel.app](https://tikleproject.vercel.app)**
+
 [English](README.md) · [Русский](README.ru.md)
 
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
