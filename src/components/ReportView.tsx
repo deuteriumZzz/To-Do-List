@@ -19,7 +19,7 @@ const TAPE =
 function HandRing({ share }: { share: number }) {
   const d = 'M28 4C42 3 53 14 52 28C51 43 40 53 27 52C13 51 3 41 4 27C5 14 15 5 28 4Z'
   return (
-    <svg aria-hidden="true" viewBox="0 0 56 56" className="pointer-events-none absolute -right-3 top-1 size-28 -rotate-90 overflow-visible opacity-30">
+    <svg aria-hidden="true" viewBox="0 0 56 56" className="pointer-events-none absolute right-2 top-3 size-[4.5rem] -rotate-90 opacity-30">
       <path d={d} fill="none" stroke="#141413" strokeOpacity="0.15" strokeWidth="5" strokeLinecap="round" />
       <motion.path
         d={d}
