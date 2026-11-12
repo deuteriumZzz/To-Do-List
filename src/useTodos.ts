@@ -1,11 +1,12 @@
 import { useState } from 'react'
+import { toISO, type ISODate } from './dates'
 import { loadTodos, saveTodos } from './storage'
 import { createTodo, todosReducer, type Action, type Todo } from './todos'
 
 export interface UndoState {
   /** Unique per change, so a new change restarts the toast timer. */
   id: number
-  kind: 'removed' | 'cleared'
+  kind: 'removed' | 'cleared' | 'completed'
   count: number
   previous: Todo[]
 }
@@ -24,8 +25,7 @@ export function useTodos() {
   }
 
   function apply(action: Action, undo?: Pick<UndoState, 'kind' | 'count'>) {
-    const next = todosReducer(todos, action)
-    commit(next)
+    commit(todosReducer(todos, action))
     setUndoState(undo ? { ...undo, id: Date.now(), previous: todos } : null)
   }
 
@@ -33,9 +33,9 @@ export function useTodos() {
     todos,
     storageOk,
     undoState,
-    /** Returns false when the text is blank and nothing was added. */
-    add(text: string) {
-      const todo = createTodo(text)
+    /** Returns false when no title is left after parsing (nothing was added). */
+    add(text: string, defaults: { due?: ISODate } = {}) {
+      const todo = createTodo(text, toISO(new Date()), defaults)
       if (todo) apply({ type: 'add', todo })
       return todo !== null
     },
@@ -45,7 +45,12 @@ export function useTodos() {
       if (trimmed) apply({ type: 'edit', id, text: trimmed })
       return trimmed !== ''
     },
-    toggle: (id: string) => apply({ type: 'toggle', id }),
+    toggle(id: string) {
+      const completing = todos.some((t) => t.id === id && !t.completed)
+      apply({ type: 'toggle', id, at: Date.now() }, completing ? { kind: 'completed', count: 1 } : undefined)
+    },
+    togglePriority: (id: string) => apply({ type: 'togglePriority', id }),
+    setDue: (id: string, due: ISODate | null) => apply({ type: 'setDue', id, due }),
     remove: (id: string) => apply({ type: 'remove', id }, { kind: 'removed', count: 1 }),
     clearCompleted() {
       const count = todos.filter((t) => t.completed).length

@@ -1,3 +1,4 @@
+import { isISODate } from './dates'
 import { isLang, type Lang } from './i18n'
 import type { Todo } from './todos'
 
@@ -29,6 +30,10 @@ function isTodo(value: unknown): value is Todo {
     typeof t.id === 'string' &&
     typeof t.text === 'string' &&
     typeof t.completed === 'boolean' &&
+    (t.priority === undefined || typeof t.priority === 'boolean') &&
+    (t.due === undefined || isISODate(t.due)) &&
+    (t.project === undefined || typeof t.project === 'string') &&
+    (t.completedAt === undefined || typeof t.completedAt === 'number') &&
     typeof t.createdAt === 'number'
   )
 }

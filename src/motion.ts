@@ -6,5 +6,3 @@ export const springs = {
 } as const
 
 export const ease = [0.22, 1, 0.36, 1] as const
-
-export const duration = { fast: 0.18, normal: 0.35 } as const

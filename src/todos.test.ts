@@ -1,58 +1,98 @@
 import { describe, expect, it } from 'vitest'
-import { createTodo, filterTodos, getStats, todosReducer, type Todo } from './todos'
+import { createTodo, getStats, projectCounts, selectTodos, todosReducer, viewCounts, type Query, type Todo } from './todos'
 
-const todo = (id: string, completed = false): Todo => ({ id, text: id, completed, createdAt: 0 })
+const TODAY = '2026-11-12'
+const todo = (id: string, extra: Partial<Todo> = {}): Todo => ({ id, text: id, completed: false, createdAt: 0, ...extra })
+const query = (view: Query['view'], extra: Partial<Query> = {}): Query => ({ view, project: null, search: '', today: TODAY, ...extra })
+const ids = (list: Todo[]) => list.map((t) => t.id)
 
 describe('createTodo', () => {
-  it('trims text and rejects blank input', () => {
-    expect(createTodo('  buy milk  ')?.text).toBe('buy milk')
-    expect(createTodo('')).toBeNull()
-    expect(createTodo('   ')).toBeNull()
+  it('trims text, rejects blank input and a lone "!"', () => {
+    expect(createTodo('  buy milk  ', TODAY)?.text).toBe('buy milk')
+    expect(createTodo('', TODAY)).toBeNull()
+    expect(createTodo('   ', TODAY)).toBeNull()
+    expect(createTodo('!', TODAY)).toBeNull()
+  })
+
+  it('applies quick-add syntax and the default date', () => {
+    const t = createTodo('!Call mum tomorrow #family', TODAY)
+    expect(t).toMatchObject({ text: 'Call mum', priority: true, due: '2026-11-13', project: 'family' })
+    expect(createTodo('Plan', TODAY, { due: '2026-12-01' })?.due).toBe('2026-12-01')
+    expect(createTodo('Plan today', TODAY, { due: '2026-12-01' })?.due).toBe(TODAY)
   })
 
   it('generates unique ids', () => {
-    expect(createTodo('a')?.id).not.toBe(createTodo('a')?.id)
+    expect(createTodo('a', TODAY)?.id).not.toBe(createTodo('a', TODAY)?.id)
   })
 })
 
 describe('todosReducer', () => {
   it('adds new tasks to the top', () => {
-    expect(todosReducer([todo('a')], { type: 'add', todo: todo('b') }).map((t) => t.id)).toEqual(['b', 'a'])
+    expect(ids(todosReducer([todo('a')], { type: 'add', todo: todo('b') }))).toEqual(['b', 'a'])
   })
 
-  it('toggles only the target task, back and forth', () => {
-    const once = todosReducer([todo('a'), todo('b')], { type: 'toggle', id: 'a' })
-    expect(once.map((t) => t.completed)).toEqual([true, false])
-    expect(todosReducer(once, { type: 'toggle', id: 'a' })[0].completed).toBe(false)
+  it('toggles back and forth and tracks completedAt', () => {
+    const done = todosReducer([todo('a'), todo('b')], { type: 'toggle', id: 'a', at: 123 })
+    expect(done.map((t) => t.completed)).toEqual([true, false])
+    expect(done[0].completedAt).toBe(123)
+    const undone = todosReducer(done, { type: 'toggle', id: 'a', at: 456 })
+    expect(undone[0]).toMatchObject({ completed: false, completedAt: undefined })
   })
 
-  it('removes only the target task', () => {
-    expect(todosReducer([todo('a'), todo('b')], { type: 'remove', id: 'a' }).map((t) => t.id)).toEqual(['b'])
+  it('toggles priority, sets and clears the date, edits text', () => {
+    const list = [todo('a'), todo('b')]
+    expect(todosReducer(list, { type: 'togglePriority', id: 'a' })[0].priority).toBe(true)
+    const dated = todosReducer(list, { type: 'setDue', id: 'a', due: '2026-11-20' })
+    expect(dated[0].due).toBe('2026-11-20')
+    expect(todosReducer(dated, { type: 'setDue', id: 'a', due: null })[0].due).toBeUndefined()
+    expect(todosReducer(list, { type: 'edit', id: 'a', text: 'new' }).map((t) => t.text)).toEqual(['new', 'b'])
   })
 
-  it('edits only the target task text', () => {
-    const next = todosReducer([todo('a'), todo('b')], { type: 'edit', id: 'a', text: 'new' })
-    expect(next.map((t) => t.text)).toEqual(['new', 'b'])
-  })
-
-  it('clears only completed tasks', () => {
-    const list = [todo('a'), todo('b', true)]
-    expect(todosReducer(list, { type: 'clearCompleted' }).map((t) => t.id)).toEqual(['a'])
+  it('removes the target and clears only completed tasks', () => {
+    expect(ids(todosReducer([todo('a'), todo('b')], { type: 'remove', id: 'a' }))).toEqual(['b'])
+    expect(ids(todosReducer([todo('a'), todo('b', { completed: true })], { type: 'clearCompleted' }))).toEqual(['a'])
   })
 })
 
-describe('filterTodos / getStats', () => {
-  const list = [todo('a'), todo('b', true), todo('c', true)]
+describe('selectTodos', () => {
+  const list = [
+    todo('plain'),
+    todo('late', { due: '2026-11-10' }),
+    todo('now', { due: TODAY }),
+    todo('soon', { due: '2026-11-14', project: 'work' }),
+    todo('done', { completed: true, due: TODAY }),
+    todo('star', { priority: true }),
+  ]
 
-  it('filters without mutating the source', () => {
-    expect(filterTodos(list, 'all')).toHaveLength(3)
-    expect(filterTodos(list, 'active').map((t) => t.id)).toEqual(['a'])
-    expect(filterTodos(list, 'completed').map((t) => t.id)).toEqual(['b', 'c'])
-    expect(list).toHaveLength(3)
+  it('filters by view without mutating the source', () => {
+    expect(ids(selectTodos(list, query('all')))).toHaveLength(6)
+    expect(ids(selectTodos(list, query('active')))).not.toContain('done')
+    expect(ids(selectTodos(list, query('completed')))).toEqual(['done'])
+    expect(list).toHaveLength(6)
   })
 
-  it('counts total, active and completed', () => {
-    expect(getStats(list)).toEqual({ total: 3, active: 1, completed: 2 })
+  it('Today includes overdue and sorts by date; Upcoming only future dates', () => {
+    expect(ids(selectTodos(list, query('today')))).toEqual(['late', 'now'])
+    expect(ids(selectTodos(list, query('upcoming')))).toEqual(['soon'])
+  })
+
+  it('floats active priority tasks to the top', () => {
+    expect(ids(selectTodos(list, query('all')))[0]).toBe('star')
+  })
+
+  it('filters by project and search text', () => {
+    expect(ids(selectTodos(list, query('all', { project: 'work' })))).toEqual(['soon'])
+    expect(ids(selectTodos(list, query('all', { search: 'LAT' })))).toEqual(['late'])
+  })
+})
+
+describe('counts', () => {
+  const list = [todo('a', { due: '2026-11-10' }), todo('b', { due: '2026-11-20', project: 'x' }), todo('c', { completed: true, project: 'x' })]
+
+  it('counts views, projects and stats', () => {
+    expect(viewCounts(list, TODAY)).toEqual({ all: 3, today: 1, upcoming: 1, active: 2, completed: 1 })
+    expect(projectCounts(list)).toEqual([{ name: 'x', count: 1 }])
+    expect(getStats(list)).toEqual({ total: 3, active: 2, completed: 1 })
     expect(getStats([])).toEqual({ total: 0, active: 0, completed: 0 })
   })
 })

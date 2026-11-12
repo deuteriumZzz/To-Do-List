@@ -1,28 +1,45 @@
-import { render, screen, waitForElementToBeRemoved } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { render, screen, waitFor, waitForElementToBeRemoved, within } from '@testing-library/react'
+import userEvent, { type UserEvent } from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import App from './App'
+import { addDays, toISO } from './dates'
+import { STORAGE_KEY } from './storage'
+
+const today = toISO(new Date())
 
 beforeEach(() => localStorage.clear())
 
-describe('App', () => {
+function seed(...todos: object[]) {
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify(todos.map((t, i) => ({ id: String(i), text: `Task ${i}`, completed: false, createdAt: i, ...t }))),
+  )
+}
+
+async function addTask(user: UserEvent, text: string) {
+  if (!screen.queryByRole('textbox', { name: 'Task name' })) {
+    await user.click(screen.getAllByRole('button', { name: 'Add task' })[0])
+  }
+  await user.type(await screen.findByRole('textbox', { name: 'Task name' }), `${text}{Enter}`)
+}
+
+describe('core flow', () => {
   it('adds, completes, filters, deletes and persists tasks', async () => {
     const user = userEvent.setup()
     const { unmount } = render(<App />)
-
     expect(screen.getByText('No tasks yet')).toBeInTheDocument()
 
-    await user.type(screen.getByLabelText('New task'), '  Write report  {Enter}')
-    expect(screen.getByLabelText('Write report')).toBeInTheDocument()
-    expect(screen.getByLabelText('New task')).toHaveValue('')
+    await user.click(screen.getAllByRole('button', { name: 'Add task' })[0])
+    const form = await screen.findByRole('form', { name: 'Add task' })
+    expect(within(form).getByRole('button', { name: 'Add task' })).toBeDisabled()
 
-    await user.click(screen.getByRole('button', { name: 'Add task' }))
-    expect(screen.getByRole('alert')).toHaveTextContent('Please enter a task first.')
+    await user.type(screen.getByRole('textbox', { name: 'Task name' }), '  Write report  {Enter}')
+    expect(screen.getByLabelText('Write report')).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: 'Task name' })).toHaveValue('')
 
     await user.click(screen.getByLabelText('Write report'))
     await user.click(screen.getByRole('button', { name: /^Active/ }))
     expect(await screen.findByText('Nothing left to do')).toBeInTheDocument()
-    expect(screen.getByRole('status')).toHaveTextContent('All tasks complete')
 
     // saved state survives a reload
     unmount()
@@ -37,7 +54,8 @@ describe('App', () => {
   it('clears completed tasks', async () => {
     const user = userEvent.setup()
     render(<App />)
-    await user.type(screen.getByLabelText('New task'), 'One{Enter}Two{Enter}')
+    await addTask(user, 'One')
+    await addTask(user, 'Two')
     await user.click(screen.getByLabelText('One'))
     await user.click(screen.getByRole('button', { name: 'Clear completed' }))
     await waitForElementToBeRemoved(() => screen.queryByLabelText('One'))
@@ -47,7 +65,7 @@ describe('App', () => {
   it('edits a task in place and ignores a blank edit', async () => {
     const user = userEvent.setup()
     render(<App />)
-    await user.type(screen.getByLabelText('New task'), 'Old name{Enter}')
+    await addTask(user, 'Old name')
 
     await user.click(screen.getByRole('button', { name: 'Edit task: Old name' }))
     await user.clear(screen.getByLabelText('Task text'))
@@ -63,28 +81,96 @@ describe('App', () => {
   it('undoes a deletion from the toast', async () => {
     const user = userEvent.setup()
     render(<App />)
-    await user.type(screen.getByLabelText('New task'), 'Keep me{Enter}')
+    await addTask(user, 'Keep me')
     await user.click(screen.getByRole('button', { name: 'Delete task: Keep me' }))
     await user.click(await screen.findByRole('button', { name: 'Undo' }))
     expect(await screen.findByLabelText('Keep me')).toBeInTheDocument()
   })
 
-  it('focuses the input with the / shortcut', async () => {
+  it('opens the add form with the / shortcut', async () => {
     const user = userEvent.setup()
     render(<App />)
     await user.keyboard('/')
-    expect(screen.getByLabelText('New task')).toHaveFocus()
+    expect(await screen.findByRole('textbox', { name: 'Task name' })).toHaveFocus()
   })
 
+  it('searches tasks and shows a message when nothing matches', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await addTask(user, 'Alpha')
+    await addTask(user, 'Beta')
+    await user.type(screen.getByRole('searchbox', { name: 'Search tasks' }), 'alp')
+    expect(screen.getByLabelText('Alpha')).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByLabelText('Beta')).not.toBeInTheDocument())
+    await user.clear(screen.getByRole('searchbox', { name: 'Search tasks' }))
+    await user.type(screen.getByRole('searchbox', { name: 'Search tasks' }), 'zzz')
+    expect(await screen.findByText('No matches')).toBeInTheDocument()
+  })
+})
+
+describe('smart features', () => {
+  it('understands quick-add syntax, priority order, dates and projects', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await addTask(user, 'plain')
+    await addTask(user, '!Urgent tomorrow #work')
+
+    const boxes = screen.getAllByRole('checkbox')
+    expect(boxes[0]).toHaveAccessibleName('Urgent')
+    expect(screen.getByRole('button', { name: 'Toggle priority: Urgent' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByText('Tomorrow')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /^Upcoming/ }))
+    expect(screen.getByLabelText('Urgent')).toBeInTheDocument()
+    expect(screen.queryByLabelText('plain')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /^work/ }))
+    expect(screen.getByRole('heading', { level: 1, name: '#work' })).toBeInTheDocument()
+    expect(screen.queryByLabelText('plain')).not.toBeInTheDocument()
+  })
+
+  it('shows overdue tasks first in Today', async () => {
+    seed({ text: 'Late one', due: addDays(today, -2) }, { text: 'Due now', due: today })
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: /^Today/ }))
+    expect(screen.getByRole('heading', { name: 'Overdue' })).toBeInTheDocument()
+    const names = screen.getAllByRole('checkbox').map((c) => c.getAttribute('aria-label'))
+    expect(names).toEqual(['Late one', 'Due now'])
+  })
+
+  it('shows tasks on the calendar and for the selected day', async () => {
+    seed({ text: 'Dentist', due: today })
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: /^Calendar/ }))
+    expect(screen.getByRole('heading', { level: 1, name: 'Calendar' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /1 task/ })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByLabelText('Dentist')).toBeInTheDocument()
+  })
+
+  it('builds the productivity report from completed tasks', async () => {
+    seed({ text: 'Finished', completed: true, completedAt: Date.now() })
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: /^Report/ }))
+    expect(screen.getByRole('heading', { level: 1, name: 'Productivity' })).toBeInTheDocument()
+    expect(screen.getAllByText('Tasks completed per day').length).toBeGreaterThan(0)
+    expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(8)
+    expect(screen.getByText('Day streak')).toBeInTheDocument()
+  })
+})
+
+describe('language', () => {
   it('switches to Russian and remembers the choice', async () => {
     const user = userEvent.setup()
     const { unmount } = render(<App />)
-    await user.click(screen.getByRole('button', { name: 'ru' }))
-    expect(screen.getByRole('heading', { name: 'Задачи' })).toBeInTheDocument()
+    await user.click(screen.getAllByRole('button', { name: 'ru' })[0])
+    expect(screen.getByRole('heading', { level: 1, name: 'Все задачи' })).toBeInTheDocument()
     expect(document.documentElement.lang).toBe('ru')
 
     unmount()
     render(<App />)
-    expect(screen.getByLabelText('Новая задача')).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: 'Добавить задачу' }).length).toBeGreaterThan(0)
   })
 })

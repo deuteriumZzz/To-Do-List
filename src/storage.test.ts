@@ -28,6 +28,13 @@ describe('loadTodos', () => {
     expect(loadTodos().todos).toEqual([valid])
   })
 
+  it('keeps optional fields when valid and drops tasks where they are malformed', () => {
+    const rich = { ...valid, id: 'r', priority: true, due: '2026-11-12', project: 'work', completedAt: 5 }
+    const badDue = { ...valid, id: 'x', due: '12/11/2026' }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([rich, badDue]))
+    expect(loadTodos().todos).toEqual([rich])
+  })
+
   it('reports unavailable storage instead of throwing', () => {
     vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
       throw new Error('blocked')

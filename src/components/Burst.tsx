@@ -1,7 +1,7 @@
 import { motion } from 'motion/react'
 import { ease } from '../motion'
 
-const COLORS = ['#ff5b14', '#2fd26b', '#ffc933', '#1c1b19']
+const COLORS = ['#141413', '#ffe14d', '#1f7a3e', '#b8332a']
 
 /** One-shot burst of tiny square sparks from the centre of the parent. */
 export function Burst({ count = 10, radius = 34 }: { count?: number; radius?: number }) {

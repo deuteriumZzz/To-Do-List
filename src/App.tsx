@@ -1,71 +1,51 @@
 import { AnimatePresence, MotionConfig, motion } from 'motion/react'
-import { useEffect, useRef, useState, type CSSProperties } from 'react'
-import { AddTodoForm } from './components/AddTodoForm'
-import { Celebration } from './components/Celebration'
+import { useEffect, useState } from 'react'
+import { AddTask } from './components/AddTask'
+import { CalendarView } from './components/CalendarView'
 import { EmptyState } from './components/EmptyState'
-import type { Mood } from './components/Face'
-import { Filters } from './components/Filters'
-import { LangSwitch } from './components/LangSwitch'
-import { Logo } from './components/Logo'
-import { Stats } from './components/Stats'
+import { ListHeader } from './components/ListHeader'
+import { ReportView } from './components/ReportView'
+import { Sidebar } from './components/Sidebar'
+import { TaskList } from './components/TaskList'
 import { Toast } from './components/Toast'
-import { TodoItem } from './components/TodoItem'
+import type { ItemHandlers } from './components/TodoItem'
+import { addDays, toISO } from './dates'
 import { detectLang, messages, type Lang } from './i18n'
-import { ease, springs } from './motion'
+import { ease } from './motion'
+import { buildReport } from './report'
 import { loadLang, saveLang } from './storage'
-import { filterTodos, getStats, type Filter } from './todos'
+import { LIST_VIEWS, getStats, projectCounts, selectTodos, viewCounts, type ListView, type View } from './todos'
 import { useTodos } from './useTodos'
 
-const MOODS: Record<Filter, Mood> = { all: 'curious', active: 'cheer', completed: 'sleepy' }
-const SCREWS = ['left-3 top-3', 'right-3 top-3', 'bottom-3 left-3', 'bottom-3 right-3']
-
-const container = { hidden: {}, show: { transition: { staggerChildren: 0.07 } } }
-const rise = {
-  hidden: { opacity: 0, y: 14 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease } },
-}
-
-/** Title whose letters rise into place one after another. */
-function Title({ text }: { text: string }) {
-  return (
-    <h1 aria-label={text} className="font-display text-4xl font-semibold leading-[1.2] tracking-tight sm:text-5xl">
-      {[...text].map((char, i) => (
-        <span key={i} aria-hidden="true" className="inline-block overflow-hidden align-bottom">
-          <motion.span
-            className="inline-block"
-            initial={{ y: '110%' }}
-            animate={{ y: 0 }}
-            transition={{ ...springs.snappy, delay: 0.15 + i * 0.045 }}
-          >
-            {char}
-          </motion.span>
-        </span>
-      ))}
-    </h1>
-  )
-}
+const TONES = { all: 'idle', today: 'idle', upcoming: 'idle', active: 'celebrate', completed: 'sleepy' } as const
+const isListView = (v: View): v is ListView => (LIST_VIEWS as View[]).includes(v)
 
 export default function App() {
-  const { todos, storageOk, undoState, add, edit, toggle, remove, clearCompleted, undo, dismissUndo } = useTodos()
-  const [filter, setFilter] = useState<Filter>('all')
+  const { todos, storageOk, undoState, add, edit, toggle, togglePriority, setDue, remove, clearCompleted, undo, dismissUndo } = useTodos()
+  const [view, setView] = useState<View>('all')
+  const [project, setProject] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+  const [adding, setAdding] = useState(false)
+  const [cheer, setCheer] = useState(0)
   const [lang, setLang] = useState<Lang>(() => loadLang() ?? detectLang())
   const [now] = useState(() => new Date())
-  const inputRef = useRef<HTMLInputElement>(null)
 
   const t = messages[lang]
+  const today = toISO(now)
 
   useEffect(() => {
     document.documentElement.lang = lang
     document.title = t.title
   }, [lang, t.title])
 
-  // "/" jumps to the input from anywhere
+  // "/" opens the add form from anywhere
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       const typing = e.target instanceof HTMLElement && (e.target.isContentEditable || ['INPUT', 'TEXTAREA'].includes(e.target.tagName))
       if (e.key === '/' && !typing && !e.metaKey && !e.ctrlKey) {
         e.preventDefault()
-        inputRef.current?.focus()
+        setView((v) => (isListView(v) ? v : 'all'))
+        setAdding(true)
       }
     }
     window.addEventListener('keydown', onKey)
@@ -77,125 +57,125 @@ export default function App() {
     saveLang(next)
   }
 
-  const stats = getStats(todos)
-  const visible = filterTodos(todos, filter)
-  const counts = { all: stats.total, active: stats.active, completed: stats.completed }
-  const today = new Intl.DateTimeFormat(t.locale, { weekday: 'long', day: 'numeric', month: 'long' }).format(now)
-  const empty = t.empty[filter]
+  function goTo(next: View) {
+    setView(next)
+    setProject(null)
+    setSearch('')
+    setAdding(false)
+  }
+
+  const projects = projectCounts(todos)
+  const activeProject = project !== null && projects.some((p) => p.name === project) ? project : null
+  const isList = isListView(view)
+  const listView: ListView = isList ? view : 'all'
+  const visible = selectTodos(todos, { view: listView, project: activeProject, search, today })
+  const scope = getStats(activeProject === null ? todos : todos.filter((x) => x.project === activeProject))
+  const searching = search.trim() !== ''
+  const defaultDue = view === 'today' ? today : view === 'upcoming' ? addDays(today, 1) : undefined
+  const dateLabel = new Intl.DateTimeFormat(t.locale, { weekday: 'long', day: 'numeric', month: 'long' }).format(now)
+
+  const handlers: ItemHandlers = {
+    onToggle(id) {
+      if (todos.some((x) => x.id === id && !x.completed)) setCheer((c) => c + 1)
+      toggle(id)
+    },
+    onRemove: remove,
+    onEdit: edit,
+    onPriority: togglePriority,
+    onDue: setDue,
+  }
+
+  const toastMessage =
+    undoState?.kind === 'cleared' ? t.toastCleared(undoState.count) : undoState?.kind === 'completed' ? t.toastCompleted : t.toastRemoved
 
   return (
     <MotionConfig reducedMotion="user">
-      <div className="min-h-svh px-3 py-4 sm:px-6 sm:py-10">
-        <motion.main
-          variants={container}
-          initial="hidden"
-          animate="show"
-          className="panel relative mx-auto flex max-w-xl flex-col gap-5 px-4 pb-8 pt-9 sm:px-8 sm:pt-11"
-        >
-          {SCREWS.map((pos, i) => (
-            <span key={pos} aria-hidden="true" className={`screw ${pos}`} style={{ '--r': `${25 + i * 40}deg` } as CSSProperties} />
-          ))}
+      <div className="min-h-svh bg-frame p-2 sm:p-4">
+        <div className="paper mx-auto flex min-h-[calc(100svh-1rem)] max-w-6xl flex-col overflow-clip rounded-[1.75rem] sm:min-h-[calc(100svh-2rem)] md:flex-row">
+          <Sidebar
+            t={t}
+            lang={lang}
+            onLang={changeLang}
+            view={view}
+            project={activeProject}
+            counts={viewCounts(todos, today)}
+            projects={projects}
+            cheer={cheer}
+            onView={goTo}
+            onProject={(name) => {
+              setProject(name === activeProject ? null : name)
+              setView('all')
+              setSearch('')
+            }}
+            onAdd={() => {
+              if (!isList) setView('all')
+              setAdding(true)
+            }}
+          />
 
-          <motion.header variants={rise} className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <motion.div whileTap={{ y: 3 }} transition={springs.pop}>
-                <Logo className="size-11 drop-shadow-[0_3px_3px_rgb(0_0_0/0.3)]" />
-              </motion.div>
-              <span className="font-display text-lg font-semibold tracking-tight">Tickle</span>
-            </div>
-            <LangSwitch value={lang} label={t.language} onChange={changeLang} />
-          </motion.header>
+          <main className="min-w-0 flex-1 px-4 pb-28 pt-6 sm:px-10 sm:pt-10">
+            <div className="mx-auto max-w-3xl">
+              <ListHeader
+                t={t}
+                view={view}
+                project={activeProject}
+                dateLabel={dateLabel}
+                isList={isList}
+                visibleCount={visible.length}
+                done={scope.completed}
+                total={scope.total}
+                search={search}
+                onSearch={setSearch}
+                onClearCompleted={clearCompleted}
+              />
 
-          <motion.div variants={rise} className="lcd flex items-center justify-between px-4 py-2 text-[11px] font-medium uppercase tracking-[0.16em]">
-            <span>{today}</span>
-            <span className="flex items-center gap-2">
-              TD-1 <span className="led" data-on="true" aria-hidden="true" />
-            </span>
-          </motion.div>
+              <AnimatePresence>
+                {!storageOk && (
+                  <motion.p
+                    role="alert"
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="mb-4 rounded-xl bg-marker px-4 py-3 text-sm font-semibold"
+                  >
+                    {t.storageWarning}
+                  </motion.p>
+                )}
+              </AnimatePresence>
 
-          <motion.div variants={rise}>
-            <Title key={lang} text={t.title} />
-            <p className="mt-2 text-ink-2">{t.subtitle}</p>
-          </motion.div>
-
-          <AnimatePresence>
-            {!storageOk && (
-              <motion.p
-                role="alert"
-                initial={{ opacity: 0, y: -8 }}
+              <motion.div
+                key={`${view}:${activeProject}`}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="plate flex items-center gap-3 px-4 py-3 text-sm"
+                transition={{ duration: 0.3, ease }}
               >
-                <span className="led" data-on="true" data-tone="signal" aria-hidden="true" />
-                {t.storageWarning}
-              </motion.p>
-            )}
-          </AnimatePresence>
-
-          <AnimatePresence>
-            {stats.total > 0 && stats.active === 0 && <Celebration message={t.allDone} />}
-          </AnimatePresence>
-
-          <motion.div variants={rise}>
-            <Stats t={t} {...stats} />
-          </motion.div>
-
-          <motion.div variants={rise}>
-            <AddTodoForm t={t} inputRef={inputRef} onAdd={add} />
-          </motion.div>
-
-          <motion.section variants={rise} aria-label={t.taskList} className="flex flex-col gap-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <Filters t={t} value={filter} counts={counts} onChange={setFilter} />
-            </div>
-
-            {visible.length > 0 ? (
-              <ul className="flex flex-col gap-2.5">
-                <AnimatePresence mode="popLayout" initial={false}>
-                  {visible.map((todo, i) => (
-                    <TodoItem key={todo.id} t={t} todo={todo} index={i + 1} onToggle={toggle} onRemove={remove} onEdit={edit} />
-                  ))}
-                </AnimatePresence>
-              </ul>
-            ) : (
-              <motion.div key={filter} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease }}>
-                <EmptyState mood={MOODS[filter]} {...empty} />
+                {view === 'calendar' && <CalendarView t={t} todos={todos} today={today} onAdd={add} {...handlers} />}
+                {view === 'report' && <ReportView t={t} report={buildReport(todos, today)} today={today} />}
+                {isList && (
+                  <>
+                    {visible.length > 0 ? (
+                      <TaskList t={t} todos={visible} view={view} today={today} {...handlers} />
+                    ) : (
+                      <EmptyState tone={searching ? 'idle' : TONES[listView]} {...(searching ? t.noResults : t.empty[listView])} />
+                    )}
+                    <AddTask
+                      t={t}
+                      today={today}
+                      open={adding}
+                      onOpen={() => setAdding(true)}
+                      onClose={() => setAdding(false)}
+                      defaultDue={defaultDue}
+                      onAdd={add}
+                    />
+                  </>
+                )}
               </motion.div>
-            )}
-
-            <AnimatePresence>
-              {stats.completed > 0 && (
-                <motion.button
-                  type="button"
-                  onClick={clearCompleted}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 6 }}
-                  transition={springs.snappy}
-                  className="key self-start px-4 py-2 text-sm font-semibold"
-                >
-                  {t.clearCompleted}
-                </motion.button>
-              )}
-            </AnimatePresence>
-          </motion.section>
-
-          <motion.p variants={rise} className="hidden text-center font-mono text-[11px] uppercase tracking-[0.18em] text-ink-2 sm:block">
-            {t.shortcutHint}
-          </motion.p>
-        </motion.main>
+            </div>
+          </main>
+        </div>
 
         <AnimatePresence>
-          {undoState && (
-            <Toast
-              key={undoState.id}
-              message={undoState.kind === 'cleared' ? t.toastCleared(undoState.count) : t.toastRemoved}
-              actionLabel={t.undo}
-              onAction={undo}
-              onDismiss={dismissUndo}
-            />
-          )}
+          {undoState && <Toast key={undoState.id} message={toastMessage} actionLabel={t.undo} onAction={undo} onDismiss={dismissUndo} />}
         </AnimatePresence>
       </div>
     </MotionConfig>
