@@ -45,7 +45,7 @@ function SearchField({ t, value, onChange }: { t: Messages; value: string; onCha
           onKeyDown={(e) => {
             if (e.key === 'Escape') onChange('')
           }}
-          className="min-w-0 flex-1 bg-transparent text-base font-semibold leading-none placeholder:font-hand placeholder:text-2xl placeholder:font-normal placeholder:text-ink-2/70 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
+          className="min-w-0 flex-1 bg-transparent font-hand text-2xl font-bold leading-none placeholder:font-normal placeholder:text-ink-2/70 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
         />
         <AnimatePresence>
           {value && (
