@@ -18,6 +18,9 @@ interface AddTaskProps {
   onAdd: (text: string, defaults: { due?: ISODate }) => boolean
 }
 
+const tag = 'inline-flex items-center gap-1 rounded-full bg-ink/10 px-2.5 py-0.5 font-hand text-xl leading-none'
+
+/** A note page taped into the notebook: same paper, pen underline and handwriting as the rest. */
 function AddForm({ t, today, onClose, defaultDue, onAdd }: Omit<AddTaskProps, 'open' | 'onOpen'>) {
   const [text, setText] = useState('')
   const [picked, setPicked] = useState<ISODate | undefined>()
@@ -40,18 +43,24 @@ function AddForm({ t, today, onClose, defaultDue, onAdd }: Omit<AddTaskProps, 'o
     setPicked(undefined)
   }
 
-  const tool = 'grid size-9 place-items-center rounded-lg hover:bg-ink/10'
+  const tool = 'grid size-9 place-items-center rounded-full text-ink-2 transition-colors hover:bg-ink/10 hover:text-ink'
 
   return (
     <motion.form
       aria-label={t.addTask}
       onSubmit={submit}
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: 8, rotate: 0 }}
+      animate={{ opacity: 1, y: 0, rotate: -0.5 }}
       exit={{ opacity: 0, y: 6, transition: { duration: 0.06 } }}
       transition={springs.snappy}
-      className="relative rounded-2xl border border-ink/70 bg-paper p-3"
+      className="paper relative mt-3 rounded-[1.1rem] px-5 pb-4 pt-6 shadow-[0_14px_28px_-16px_rgb(0_0_0/0.55)] ring-1 ring-ink/15"
     >
+      {/* washi tape */}
+      <span
+        aria-hidden="true"
+        className="absolute -top-3 left-8 h-6 w-24 -rotate-3 bg-marker/80 shadow-sm [clip-path:polygon(0_0,100%_0,98%_25%,100%_50%,98%_75%,100%_100%,0_100%,2%_75%,0_50%,2%_25%)]"
+      />
+
       <input
         autoFocus
         value={text}
@@ -63,26 +72,43 @@ function AddForm({ t, today, onClose, defaultDue, onAdd }: Omit<AddTaskProps, 'o
         onKeyDown={(e) => {
           if (e.key === 'Escape') onClose()
         }}
-        className="w-full bg-transparent px-1 py-1.5 text-lg font-semibold placeholder:font-normal placeholder:text-ink-2/60 focus:outline-none"
+        className="w-full bg-transparent py-1 text-xl font-semibold placeholder:font-hand placeholder:text-3xl placeholder:font-normal placeholder:text-ink-2/60 focus:outline-none"
       />
+      <svg aria-hidden="true" viewBox="0 0 100 6" preserveAspectRatio="none" className="h-2 w-full overflow-visible">
+        <motion.path
+          d="M0 3 Q10 0.5 22 3 T46 3 T70 3 T100 2.5"
+          fill="none"
+          stroke="#141413"
+          strokeWidth="2"
+          strokeLinecap="round"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: 0.5, delay: 0.15, ease: 'easeOut' }}
+        />
+      </svg>
 
-      <div className="flex min-h-7 flex-wrap items-center gap-2 px-1 pb-2 pt-1 text-sm">
+      <div className="flex min-h-9 flex-wrap items-center gap-2 pt-2">
         {parsed.priority && (
-          <span className="marker rounded px-1.5 font-semibold" style={{ backgroundSize: '100% 100%' }}>
+          <span className="marker px-2 font-hand text-xl leading-none" style={{ backgroundSize: '100% 100%' }}>
             {t.priority}
           </span>
         )}
-        {due && <span className="rounded bg-ink/10 px-1.5 font-semibold">{formatDue(due, today, t.locale, t)}</span>}
-        {parsed.project && <span className="rounded bg-ink/10 px-1.5 font-semibold">#{parsed.project}</span>}
+        {due && (
+          <span className={tag}>
+            <CalendarIcon className="size-3.5" />
+            {formatDue(due, today, t.locale, t)}
+          </span>
+        )}
+        {parsed.project && <span className={tag}>#{parsed.project}</span>}
       </div>
 
-      <div className="flex items-center gap-1 border-t border-line pt-3">
+      <div className="mt-2 flex items-center gap-1 border-t border-dashed border-ink/25 pt-3">
         <motion.button
           type="button"
           aria-pressed={parsed.priority}
           aria-label={t.priority}
           onClick={() => setText(parsed.priority ? text.replace(/^\s*!/, '') : `!${text}`)}
-          className={`${tool} ${parsed.priority ? 'bg-marker' : ''}`}
+          className={`${tool} ${parsed.priority ? 'bg-marker text-ink' : ''}`}
           {...hoverProps}
         >
           <StarIcon filled={parsed.priority} />
@@ -91,13 +117,13 @@ function AddForm({ t, today, onClose, defaultDue, onAdd }: Omit<AddTaskProps, 'o
           <CalendarIcon />
         </DateButton>
         <span className="flex-1" />
-        <button type="button" onClick={onClose} className="rounded-lg px-3 py-2 text-sm font-semibold text-ink-2 hover:bg-ink/10">
+        <button type="button" onClick={onClose} className="rounded-full px-3 py-1 font-hand text-2xl leading-none text-ink-2 hover:text-ink">
           {t.cancel}
         </button>
         <button
           type="submit"
           disabled={!canAdd}
-          className="rounded-lg bg-ink px-4 py-2 text-sm font-bold text-paper transition-[opacity,transform] active:scale-95 disabled:opacity-35"
+          className="rounded-[14px_20px_16px_22px] bg-ink px-5 py-1.5 font-hand text-2xl leading-none text-paper shadow-[0_3px_0_rgb(0_0_0/0.35)] transition-[opacity,transform,box-shadow] hover:-translate-y-px active:translate-y-0.5 active:shadow-none disabled:opacity-35 disabled:hover:translate-y-0"
         >
           {t.addTask}
         </button>
@@ -106,7 +132,7 @@ function AddForm({ t, today, onClose, defaultDue, onAdd }: Omit<AddTaskProps, 'o
   )
 }
 
-/** Todoist-style inline add: a quiet "+ Add task" row that opens into a form. */
+/** Inline add: a quiet "+ Add task" row that opens into a taped note. */
 export function AddTask(props: AddTaskProps) {
   const { t, open, onOpen } = props
   return (
@@ -122,7 +148,7 @@ export function AddTask(props: AddTaskProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.06 } }}
-            className="flex w-full items-center gap-3 rounded-lg px-1 py-3 text-left font-semibold text-ink-2 hover:text-ink"
+            className="flex w-full items-center gap-3 rounded-lg px-1 py-2.5 text-left font-hand text-2xl leading-none text-ink-2 hover:text-ink"
             whileHover="hover"
             whileTap="tap"
           >

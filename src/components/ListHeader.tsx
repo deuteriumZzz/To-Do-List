@@ -68,7 +68,6 @@ function SearchField({ t, value, onChange }: { t: Messages; value: string; onCha
           stroke="#141413"
           strokeWidth="2.2"
           strokeLinecap="round"
-          vectorEffect="non-scaling-stroke"
           initial={false}
           animate={{ pathLength: focused ? 1 : 0, opacity: focused ? 1 : 0 }}
           transition={{ duration: 0.35, ease: 'easeOut' }}
@@ -92,13 +91,6 @@ export function ListHeader({ t, view, project, dateLabel, isList, done, total, s
 
       {isList && (
         <div className="mt-6">
-          {/* rough edge filter: makes the highlighter bar look hand-drawn */}
-          <svg width="0" height="0" aria-hidden="true" className="absolute">
-            <filter id="rough-edge" x="-2%" y="-30%" width="104%" height="160%">
-              <feTurbulence type="fractalNoise" baseFrequency="0.03 0.14" numOctaves="2" seed="4" result="noise" />
-              <feDisplacementMap in="SourceGraphic" in2="noise" scale="3.4" />
-            </filter>
-          </svg>
           <div className="flex items-center gap-4">
             <div
               role="progressbar"

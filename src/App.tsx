@@ -91,6 +91,13 @@ export default function App() {
   return (
     <MotionConfig reducedMotion="user">
       <div className="min-h-svh bg-frame p-2 sm:p-4">
+        {/* shared SVG filter: gives highlighter shapes a hand-drawn edge */}
+        <svg width="0" height="0" aria-hidden="true" className="absolute">
+          <filter id="rough-edge" x="-2%" y="-30%" width="104%" height="160%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.03 0.14" numOctaves="2" seed="4" result="noise" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="3.4" />
+          </filter>
+        </svg>
         <div className="paper mx-auto flex min-h-[calc(100svh-1rem)] max-w-6xl flex-col overflow-clip rounded-[1.75rem] sm:min-h-[calc(100svh-2rem)] md:flex-row">
           <Sidebar
             t={t}
@@ -114,7 +121,7 @@ export default function App() {
           />
 
           <main className="min-w-0 flex-1 px-4 pb-28 pt-6 sm:px-10 sm:pt-10">
-            <div className="mx-auto max-w-3xl">
+            <div className={`mx-auto ${view === 'calendar' ? 'max-w-5xl' : 'max-w-3xl'}`}>
               <ListHeader
                 t={t}
                 view={view}
