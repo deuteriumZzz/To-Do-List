@@ -1,7 +1,7 @@
 {
-  "name": "todo-list",
+  "name": "tickle",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -33,5 +33,19 @@
     "typescript": "~7.0.2",
     "vite": "^8.3.6",
     "vitest": "^5.1.0"
-  }
+  },
+  "description": "Tickle: a to-do list that feels like pen and paper. Calendar, productivity report and quick add, stored in your browser.",
+  "license": "MIT",
+  "keywords": [
+    "todo",
+    "task-manager",
+    "planner",
+    "productivity",
+    "calendar",
+    "react",
+    "typescript",
+    "tailwindcss",
+    "motion",
+    "localstorage"
+  ]
 }
