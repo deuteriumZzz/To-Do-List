@@ -4,6 +4,24 @@ import type { Todo } from './todos'
 
 export const STORAGE_KEY = 'todo-list:v1'
 export const LANG_KEY = 'todo-list:lang'
+const SWIPE_KEY = 'todo-list:swipe-hint'
+
+/** Whether the one-time swipe demonstration has already been shown. */
+export function swipeHintSeen(): boolean {
+  try {
+    return localStorage.getItem(SWIPE_KEY) === '1'
+  } catch {
+    return true
+  }
+}
+
+export function markSwipeHintSeen(): void {
+  try {
+    localStorage.setItem(SWIPE_KEY, '1')
+  } catch {
+    // the hint may be shown again next time
+  }
+}
 
 /** Saved interface language, or null if none or storage is unavailable. */
 export function loadLang(): Lang | null {

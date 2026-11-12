@@ -28,7 +28,7 @@ A to-do list that feels like pen and paper. Built with React and TypeScript; eve
 - Tick, the mascot: a check mark with one eye that follows the pointer and hops when you finish a task
 - A stationery colour code: yellow = important, green = today, blue = tomorrow, red = overdue; each section has its own highlight colour and the progress strip changes colour as the day goes on
 - Hand-drawn checkboxes, brush-stroke highlighter used for important tasks, calendar notes, tags and the selected menu item (painted on left to right), handwritten dates; finishing a task crosses it out with an uneven pen stroke that is drawn across the text
-- Every icon has its own hover animation (the bin lifts its lid, the calendar flips, the pencil writes, ...); swipe a task left to delete, right to complete
+- Every icon has its own hover animation (the bin lifts its lid, the calendar flips, the pencil writes, ...); swipe a task left to delete or right to complete (a green or red patch with an icon shows what will happen, the first task demonstrates the gesture once on touch screens, and a handwritten hint sits under the list)
 - Keyboard: `/` opens the add form from anywhere, `Esc` closes it or clears the search
 - Responsive layout (sidebar on desktop, top bar on mobile); motion respects `prefers-reduced-motion`
 

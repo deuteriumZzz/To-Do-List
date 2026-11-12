@@ -13,7 +13,7 @@ import { addDays, toISO } from './dates'
 import { detectLang, messages, type Lang } from './i18n'
 import { ease } from './motion'
 import { buildReport } from './report'
-import { loadLang, saveLang } from './storage'
+import { loadLang, saveLang, swipeHintSeen } from './storage'
 import { LIST_VIEWS, getStats, projectCounts, selectTodos, viewCounts, type ListView, type View } from './todos'
 import { useTodos } from './useTodos'
 
@@ -29,6 +29,8 @@ export default function App() {
   const [cheer, setCheer] = useState(0)
   const [lang, setLang] = useState<Lang>(() => loadLang() ?? detectLang())
   const [now] = useState(() => new Date())
+  // on touch screens, the first task shows the swipe gesture once
+  const [peek] = useState(() => window.matchMedia('(hover: none)').matches && !swipeHintSeen())
 
   const t = messages[lang]
   const today = toISO(now)
@@ -161,7 +163,10 @@ export default function App() {
                 {isList && (
                   <>
                     {visible.length > 0 ? (
-                      <TaskList t={t} todos={visible} view={view} today={today} {...handlers} />
+                      <>
+                        <TaskList t={t} todos={visible} view={view} today={today} peek={peek} {...handlers} />
+                        <p className="mt-3 text-center font-hand text-xl leading-tight text-ink-2 [@media(hover:hover)]:hidden">{t.swipe.hint}</p>
+                      </>
                     ) : (
                       <EmptyState tone={searching ? 'idle' : TONES[listView]} {...(searching ? t.noResults : t.empty[listView])} />
                     )}

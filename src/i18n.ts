@@ -60,6 +60,12 @@ const en = {
     dec: (unit: string) => `${unit}: earlier`,
   },
   overdue: 'Overdue',
+  swipe: {
+    done: 'Done',
+    undo: 'Restore',
+    delete: 'Delete',
+    hint: 'Swipe a task left to delete it, right to complete it',
+  },
   shortcutHint: 'Press / to add a task. Try: !call mum tomorrow #family',
   examples: ['Buy oat milk tomorrow', '!Call mum tomorrow at 18:30 #family', 'Book the dentist today', 'Finish the report #work'],
   calendar: {
@@ -162,6 +168,12 @@ const ru: Messages = {
     dec: (unit) => `${unit}: раньше`,
   },
   overdue: 'Просрочено',
+  swipe: {
+    done: 'Готово',
+    undo: 'Вернуть',
+    delete: 'Удалить',
+    hint: 'Смахните задачу влево, чтобы удалить, вправо, чтобы выполнить',
+  },
   shortcutHint: 'Нажмите /, чтобы добавить задачу. Попробуйте: !позвонить маме завтра #семья',
   examples: ['Купить молоко завтра', '!Позвонить маме завтра в 18:30 #семья', 'Записаться к врачу сегодня', 'Закончить отчёт #работа'],
   calendar: {

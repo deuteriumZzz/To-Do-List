@@ -1,9 +1,10 @@
-import { motion } from 'motion/react'
-import { useState } from 'react'
+import { animate, motion, useMotionValue, useTransform } from 'motion/react'
+import { useEffect, useState } from 'react'
 import { addDays, formatDue, formatTime, type ISODate, type Time } from '../dates'
 import type { Messages } from '../i18n'
 import { hoverProps, springs } from '../motion'
 import { PALETTE, painted, projectHue } from '../palette'
+import { markSwipeHintSeen } from '../storage'
 import { isOverdue, type Todo } from '../todos'
 import { Burst } from './Burst'
 import { DateButton } from './DatePicker'
@@ -23,16 +24,42 @@ interface TodoItemProps extends ItemHandlers {
   t: Messages
   todo: Todo
   today: ISODate
+  /** Briefly swipe the row left and right to show the gesture (first run, touch screens). */
+  peek?: boolean
 }
 
 const iconButton =
   'grid size-8 shrink-0 place-items-center rounded-lg text-ink-2 transition-colors hover:bg-ink/10 hover:text-ink focus-visible:opacity-100 group-focus-within:opacity-100 [@media(hover:hover)]:opacity-35 [@media(hover:hover)]:group-hover:opacity-100'
 
-export function TodoItem({ t, todo, today, onToggle, onRemove, onEdit, onPriority, onDue, onTime }: TodoItemProps) {
+/** Distance after which letting go completes or deletes the task. */
+const SWIPE_DISTANCE = 96
+
+export function TodoItem({ t, todo, today, peek = false, onToggle, onRemove, onEdit, onPriority, onDue, onTime }: TodoItemProps) {
   const [burst, setBurst] = useState(0)
   const [draft, setDraft] = useState<string | null>(null)
   const highlighted = todo.priority === true && !todo.completed
   const overdue = isOverdue(todo, today)
+
+  // swipe feedback: the action colour fades in under the row, its icon grows near the threshold
+  const x = useMotionValue(0)
+  const showDone = useTransform(x, [0, 40], [0, 1])
+  const showDelete = useTransform(x, [0, -40], [0, 1])
+  // transparent at rest (so the paper shows through), opaque while swiping (to hide the action colour beneath)
+  const rowFill = useTransform(x, [-2, 0, 2], ['rgb(239,236,228)', 'rgba(239,236,228,0)', 'rgb(239,236,228)'])
+  const doneIcon = useTransform(x, [0, SWIPE_DISTANCE, 140], [0.7, 1.1, 1.3])
+  const deleteIcon = useTransform(x, [0, -SWIPE_DISTANCE, -140], [0.7, 1.1, 1.3])
+
+  useEffect(() => {
+    if (!peek) return
+    const controls = animate(x, [0, -72, 0, 72, 0], {
+      duration: 2.4,
+      delay: 1.2,
+      ease: 'easeInOut',
+      times: [0, 0.25, 0.5, 0.75, 1],
+      onComplete: markSwipeHintSeen,
+    })
+    return () => controls.stop()
+  }, [peek, x])
 
   function finishEdit(save: boolean) {
     if (save && draft !== null) onEdit(todo.id, draft)
@@ -45,18 +72,39 @@ export function TodoItem({ t, todo, today, onToggle, onRemove, onEdit, onPriorit
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: -28 }}
-      drag="x"
-      dragConstraints={{ left: 0, right: 0 }}
-      dragElastic={{ left: 0.5, right: 0.5 }}
-      dragSnapToOrigin
-      onDragEnd={(_, info) => {
-        if (info.offset.x < -96 || info.velocity.x < -600) onRemove(todo.id)
-        else if (info.offset.x > 96 || info.velocity.x > 600) onToggle(todo.id)
-      }}
       transition={springs.snappy}
-      className="group border-b border-line transition-colors hover:bg-ink/[0.03]"
+      className="group relative border-b border-line transition-colors hover:bg-ink/[0.03]"
     >
-      <div className="flex items-start gap-3 px-1 py-3">
+      {/* what the swipe will do, revealed under the row */}
+      <div aria-hidden="true" className="absolute inset-0">
+        <motion.div style={{ opacity: showDone, backgroundColor: PALETTE.green }} className="absolute inset-0 flex items-center gap-2 pl-4">
+          <motion.span style={{ scale: doneIcon }} className="grid">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" className="size-6">
+              <path d="M5 12.5l4.5 4.5L19 7" />
+            </svg>
+          </motion.span>
+          <span className="font-hand text-2xl font-bold leading-none">{todo.completed ? t.swipe.undo : t.swipe.done}</span>
+        </motion.div>
+        <motion.div style={{ opacity: showDelete, backgroundColor: '#ffc4ba' }} className="absolute inset-0 flex items-center justify-end gap-2 pr-4">
+          <span className="font-hand text-2xl font-bold leading-none">{t.swipe.delete}</span>
+          <motion.span style={{ scale: deleteIcon }} className="grid">
+            <TrashIcon className="size-6" />
+          </motion.span>
+        </motion.div>
+      </div>
+
+      <motion.div
+        drag="x"
+        style={{ x, backgroundColor: rowFill }}
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={{ left: 0.5, right: 0.5 }}
+        dragSnapToOrigin
+        onDragEnd={(_, info) => {
+          if (info.offset.x < -SWIPE_DISTANCE || info.velocity.x < -600) onRemove(todo.id)
+          else if (info.offset.x > SWIPE_DISTANCE || info.velocity.x > 600) onToggle(todo.id)
+        }}
+        className="relative flex items-start gap-3 px-1 py-3"
+      >
         <label className="group/check relative mt-px shrink-0 cursor-pointer">
           <input
             type="checkbox"
@@ -181,7 +229,7 @@ export function TodoItem({ t, todo, today, onToggle, onRemove, onEdit, onPriorit
             </motion.button>
           </div>
         )}
-      </div>
+      </motion.div>
     </motion.li>
   )
 }
