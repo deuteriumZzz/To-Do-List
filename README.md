@@ -24,7 +24,7 @@ A to-do list that feels like pen and paper. Built with React and TypeScript; eve
 **Report**: tasks completed today and over the last 7 days, day streak, completion rate, overdue and due-today counts, and a 7-day bar chart (with a screen-reader table).
 
 **Feel**
-- English and Russian interface (follows the browser language, switchable and remembered)
+- Russian and English interface (Russian first and by default, English for English-language browsers; switchable and remembered)
 - Tick, the mascot: a check mark with one eye that follows the pointer and hops when you finish a task
 - Hand-drawn checkboxes, brush-stroke highlighter, handwritten dates; finishing a task crosses it out with an uneven pen stroke that is drawn across the text
 - Every icon has its own hover animation (the bin lifts its lid, the calendar flips, the pencil writes, ...); swipe a task left to delete, right to complete

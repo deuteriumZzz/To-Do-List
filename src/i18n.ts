@@ -178,14 +178,14 @@ const ru: Messages = {
   },
 }
 
-export const LANGS: Lang[] = ['en', 'ru']
+export const LANGS: Lang[] = ['ru', 'en']
 export const messages: Record<Lang, Messages> = { en, ru }
 
 export function isLang(value: unknown): value is Lang {
   return value === 'en' || value === 'ru'
 }
 
-/** Browser language, falling back to English. */
+/** Russian is the default; English only for browsers that are set to English. */
 export function detectLang(): Lang {
-  return navigator.language.toLowerCase().startsWith('ru') ? 'ru' : 'en'
+  return navigator.language.toLowerCase().startsWith('en') ? 'en' : 'ru'
 }

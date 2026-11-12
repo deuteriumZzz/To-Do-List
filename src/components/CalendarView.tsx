@@ -39,9 +39,9 @@ function PenRing() {
 const rank = (t: Todo) => (t.completed ? 2 : t.priority ? 0 : 1)
 
 const TONES = {
-  active: 'border-ink bg-ink/10 max-sm:bg-ink/70',
-  priority: 'border-ink bg-marker max-sm:ring-1 max-sm:ring-ink/60',
-  done: 'border-ink/30 text-ink-2 line-through max-sm:bg-ink/20',
+  active: 'bg-ink/[0.1] max-sm:bg-ink/70',
+  priority: 'bg-marker max-sm:ring-1 max-sm:ring-ink/60',
+  done: 'text-ink-2 line-through ring-1 ring-inset ring-ink/15 max-sm:bg-ink/20 max-sm:ring-0',
 }
 const toneOf = (todo: Todo) => (todo.completed ? TONES.done : todo.priority ? TONES.priority : TONES.active)
 
@@ -52,7 +52,7 @@ function Chip({ todo }: { todo: Todo }) {
       initial={{ opacity: 0, scale: 0.85 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={springs.pop}
-      className={`block origin-left rounded-md border-l-[3px] px-1.5 py-0.5 text-xs font-semibold leading-4 max-sm:h-1.5 max-sm:rounded-full max-sm:border-l-0 max-sm:p-0 ${toneOf(todo)}`}
+      className={`block origin-left rounded-md px-1.5 py-0.5 text-xs font-semibold leading-4 max-sm:h-1.5 max-sm:rounded-full max-sm:p-0 ${toneOf(todo)}`}
     >
       <span className="line-clamp-2 break-words max-sm:hidden">{todo.text}</span>
     </motion.span>
@@ -206,7 +206,7 @@ export function CalendarView({ t, todos, today, onAdd, ...handlers }: CalendarVi
         <div className="mt-3 hidden flex-wrap items-center justify-center gap-x-5 gap-y-1 font-hand text-lg leading-none text-ink-2 sm:flex">
           {legend.map((l) => (
             <span key={l.label} className="inline-flex items-center gap-1.5">
-              <span className={`h-3.5 w-5 rounded-sm border-l-[3px] ${l.tone.replace(/max-sm:\S+/g, '')}`} />
+              <span className={`h-3.5 w-6 rounded-md ${l.tone.replace(/max-sm:\S+/g, '')}`} />
               {l.label}
             </span>
           ))}

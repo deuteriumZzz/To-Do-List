@@ -19,58 +19,60 @@ interface ListHeaderProps {
   onClearCompleted: () => void
 }
 
-/** Search as a line in a notebook: handwritten text, a pen draws the underline on focus. */
+/** Search written in the notebook: a hand-drawn baseline, and a marker swipe is painted behind it on focus. */
 function SearchField({ t, value, onChange }: { t: Messages; value: string; onChange: (v: string) => void }) {
   const [focused, setFocused] = useState(false)
   return (
-    <motion.div
-      {...hoverProps}
-      className="relative flex w-full items-center gap-2 border-b-2 border-ink/20 pb-1 transition-[width] duration-300 sm:w-56 sm:focus-within:w-72"
-    >
-      <motion.span animate={focused ? { rotate: [0, -14, 10, 0] } : { rotate: 0 }} transition={{ duration: 0.5 }} className="text-ink-2">
-        <SearchIcon />
-      </motion.span>
-      <input
-        type="search"
-        value={value}
-        placeholder={t.search}
-        aria-label={t.search}
-        onChange={(e) => onChange(e.target.value)}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        onKeyDown={(e) => {
-          if (e.key === 'Escape') onChange('')
-        }}
-        className="min-w-0 flex-1 bg-transparent font-hand text-2xl leading-none placeholder:text-ink-2/70 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
+    <motion.div {...hoverProps} className="relative w-full transition-[width] duration-300 sm:w-56 sm:focus-within:w-72">
+      <span
+        aria-hidden="true"
+        className="marker pointer-events-none absolute -inset-x-1.5 bottom-0 h-10"
+        style={{ backgroundSize: focused ? '100% 100%' : '0% 100%' }}
       />
-      <AnimatePresence>
-        {value && (
-          <motion.button
-            type="button"
-            aria-label={t.cancel}
-            onClick={() => onChange('')}
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.5 }}
-            transition={springs.pop}
-            whileHover="hover"
-            whileTap="tap"
-            className="grid size-6 place-items-center rounded-full text-ink-2 hover:bg-ink/10 hover:text-ink"
-          >
-            <CloseIcon className="size-3.5" />
-          </motion.button>
-        )}
-      </AnimatePresence>
-      <svg aria-hidden="true" viewBox="0 0 100 6" preserveAspectRatio="none" className="pointer-events-none absolute -bottom-1 left-0 h-2 w-full overflow-visible">
-        <motion.path
-          d="M0 3 Q10 0.5 22 3 T46 3 T70 3 T100 2.5"
+      <div className="relative flex items-center gap-2 pb-1.5">
+        <motion.span animate={focused ? { rotate: [0, -14, 10, 0] } : { rotate: 0 }} transition={{ duration: 0.5 }} className="text-ink-2">
+          <SearchIcon />
+        </motion.span>
+        <input
+          type="search"
+          value={value}
+          placeholder={t.search}
+          aria-label={t.search}
+          onChange={(e) => onChange(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') onChange('')
+          }}
+          className="min-w-0 flex-1 bg-transparent font-hand text-2xl leading-none placeholder:text-ink-2/70 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
+        />
+        <AnimatePresence>
+          {value && (
+            <motion.button
+              type="button"
+              aria-label={t.cancel}
+              onClick={() => onChange('')}
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.5 }}
+              transition={springs.pop}
+              whileHover="hover"
+              whileTap="tap"
+              className="grid size-6 place-items-center rounded-full text-ink-2 hover:bg-ink/10 hover:text-ink"
+            >
+              <CloseIcon className="size-3.5" />
+            </motion.button>
+          )}
+        </AnimatePresence>
+      </div>
+      <svg aria-hidden="true" viewBox="0 0 100 8" preserveAspectRatio="none" className="pointer-events-none absolute -bottom-1 left-0 h-2 w-full overflow-visible">
+        <path
+          d="M0 4 Q8 1 18 4.500 T40 3.500 T64 5 T84 3 T100 4"
           fill="none"
           stroke="#141413"
-          strokeWidth="2.2"
+          strokeWidth="1.8"
           strokeLinecap="round"
-          initial={false}
-          animate={{ pathLength: focused ? 1 : 0, opacity: focused ? 1 : 0 }}
-          transition={{ duration: 0.35, ease: 'easeOut' }}
+          opacity="0.35"
         />
       </svg>
     </motion.div>
