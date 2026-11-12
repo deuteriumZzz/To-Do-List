@@ -1,27 +1,41 @@
+import { motion } from 'motion/react'
+import type { Messages } from '../i18n'
+import { springs } from '../motion'
 import type { Filter } from '../todos'
 
-const OPTIONS: { value: Filter; label: string }[] = [
-  { value: 'all', label: 'All' },
-  { value: 'active', label: 'Active' },
-  { value: 'completed', label: 'Completed' },
-]
+const ORDER: Filter[] = ['all', 'active', 'completed']
 
-export function Filters({ value, onChange }: { value: Filter; onChange: (f: Filter) => void }) {
+interface FiltersProps {
+  t: Messages
+  value: Filter
+  counts: Record<Filter, number>
+  onChange: (f: Filter) => void
+}
+
+export function Filters({ t, value, counts, onChange }: FiltersProps) {
   return (
-    <div role="group" aria-label="Filter tasks" className="inline-flex rounded-xl bg-slate-100 p-1">
-      {OPTIONS.map((o) => (
+    <div role="group" aria-label={t.filterGroup} className="flex w-full gap-1 rounded-2xl bg-line/70 p-1 sm:w-auto">
+      {ORDER.map((f) => (
         <button
-          key={o.value}
+          key={f}
           type="button"
-          aria-pressed={value === o.value}
-          onClick={() => onChange(o.value)}
-          className={`rounded-lg px-4 py-1.5 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-indigo-600 ${
-            value === o.value
-              ? 'bg-white text-slate-900 shadow-sm'
-              : 'text-slate-600 hover:text-slate-900'
+          aria-pressed={value === f}
+          onClick={() => onChange(f)}
+          className={`relative flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-accent sm:flex-none sm:px-4 ${
+            value === f ? 'text-ink' : 'text-muted hover:text-ink'
           }`}
         >
-          {o.label}
+          {value === f && (
+            <motion.span
+              layoutId="filter-pill"
+              transition={springs.snappy}
+              className="absolute inset-0 rounded-xl bg-surface shadow-sm"
+            />
+          )}
+          <span className="relative">{t.filters[f]}</span>
+          <span aria-hidden="true" className="relative text-xs tabular-nums text-muted">
+            {counts[f]}
+          </span>
         </button>
       ))}
     </div>
