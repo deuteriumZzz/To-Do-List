@@ -11,6 +11,7 @@ export type Action =
   | { type: 'add'; todo: Todo }
   | { type: 'toggle'; id: string }
   | { type: 'remove'; id: string }
+  | { type: 'edit'; id: string; text: string }
   | { type: 'clearCompleted' }
 
 export const MAX_LENGTH = 200
@@ -30,6 +31,8 @@ export function todosReducer(todos: Todo[], action: Action): Todo[] {
       return todos.map((t) => (t.id === action.id ? { ...t, completed: !t.completed } : t))
     case 'remove':
       return todos.filter((t) => t.id !== action.id)
+    case 'edit':
+      return todos.map((t) => (t.id === action.id ? { ...t, text: action.text } : t))
     case 'clearCompleted':
       return todos.filter((t) => !t.completed)
   }

@@ -30,6 +30,11 @@ describe('todosReducer', () => {
     expect(todosReducer([todo('a'), todo('b')], { type: 'remove', id: 'a' }).map((t) => t.id)).toEqual(['b'])
   })
 
+  it('edits only the target task text', () => {
+    const next = todosReducer([todo('a'), todo('b')], { type: 'edit', id: 'a', text: 'new' })
+    expect(next.map((t) => t.text)).toEqual(['new', 'b'])
+  })
+
   it('clears only completed tasks', () => {
     const list = [todo('a'), todo('b', true)]
     expect(todosReducer(list, { type: 'clearCompleted' }).map((t) => t.id)).toEqual(['a'])
