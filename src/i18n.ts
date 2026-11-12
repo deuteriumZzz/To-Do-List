@@ -60,6 +60,7 @@ const en = {
     today: 'Today',
     free: 'Nothing planned for this day.',
     more: (n: number) => `+${n} more`,
+    byProject: 'colour = project',
     addOn: (date: string) => `Add a task for ${date}`,
   },
   report: {
@@ -153,6 +154,7 @@ const ru: Messages = {
     today: 'Сегодня',
     free: 'На этот день ничего не запланировано.',
     more: (n) => `ещё ${n}`,
+    byProject: 'цвет = проект',
     addOn: (date) => `Добавить задачу на ${date}`,
   },
   report: {

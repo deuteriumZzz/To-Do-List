@@ -1,8 +1,9 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useState, type SubmitEvent } from 'react'
-import { formatDue, parseQuickAdd, type ISODate } from '../dates'
+import { addDays, formatDue, parseQuickAdd, type ISODate } from '../dates'
 import type { Messages } from '../i18n'
 import { hoverProps, springs } from '../motion'
+import { PALETTE, projectHue, type Hue } from '../palette'
 import { MAX_LENGTH } from '../todos'
 import { DateButton } from './DatePicker'
 import { CalendarIcon, PlusIcon, StarIcon } from './icons'
@@ -18,6 +19,8 @@ interface AddTaskProps {
   onAdd: (text: string, defaults: { due?: ISODate }) => boolean
 }
 
+const TAPES: Hue[] = ['yellow', 'pink', 'green', 'sky', 'orange', 'lilac']
+
 const tag = 'inline-flex items-center gap-1 rounded-full bg-ink/10 px-2.5 py-0.5 font-hand text-xl leading-none'
 
 /** A note page taped into the notebook: same paper, pen underline and handwriting as the rest. */
@@ -25,6 +28,7 @@ function AddForm({ t, today, onClose, defaultDue, onAdd }: Omit<AddTaskProps, 'o
   const [text, setText] = useState('')
   const [picked, setPicked] = useState<ISODate | undefined>()
   const [example, setExample] = useState(0)
+  const [tape] = useState(() => TAPES[Math.floor(Math.random() * TAPES.length)])
 
   useEffect(() => {
     const timer = setInterval(() => setExample((n) => n + 1), 3500)
@@ -58,7 +62,8 @@ function AddForm({ t, today, onClose, defaultDue, onAdd }: Omit<AddTaskProps, 'o
       {/* washi tape */}
       <span
         aria-hidden="true"
-        className="absolute -top-3 left-8 h-6 w-24 -rotate-3 bg-marker/80 shadow-sm [clip-path:polygon(0_0,100%_0,98%_25%,100%_50%,98%_75%,100%_100%,0_100%,2%_75%,0_50%,2%_25%)]"
+        style={{ backgroundColor: PALETTE[tape] }}
+        className="absolute -top-3 left-8 h-6 w-24 -rotate-3 opacity-90 shadow-sm [clip-path:polygon(0_0,100%_0,98%_25%,100%_50%,98%_75%,100%_100%,0_100%,2%_75%,0_50%,2%_25%)]"
       />
 
       <input
@@ -94,12 +99,19 @@ function AddForm({ t, today, onClose, defaultDue, onAdd }: Omit<AddTaskProps, 'o
           </span>
         )}
         {due && (
-          <span className={tag}>
+          <span
+            className={tag}
+            style={due === today ? { backgroundColor: PALETTE.green } : due === addDays(today, 1) ? { backgroundColor: PALETTE.sky } : undefined}
+          >
             <CalendarIcon className="size-3.5" />
             {formatDue(due, today, t.locale, t)}
           </span>
         )}
-        {parsed.project && <span className={tag}>#{parsed.project}</span>}
+        {parsed.project && (
+          <span className={tag} style={{ backgroundColor: PALETTE[projectHue(parsed.project)] }}>
+            #{parsed.project}
+          </span>
+        )}
       </div>
 
       <div className="mt-2 flex items-center gap-1 border-t border-dashed border-ink/25 pt-3">

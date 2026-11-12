@@ -3,6 +3,7 @@ import { useRef, useState, type KeyboardEvent } from 'react'
 import { addDays, fromISO, monthGrid, weekdayNames, type ISODate } from '../dates'
 import type { Messages } from '../i18n'
 import { hoverProps, springs } from '../motion'
+import { PALETTE, projectHue } from '../palette'
 import type { Todo } from '../todos'
 import { AddTask } from './AddTask'
 import { ChevronIcon, PlusIcon } from './icons'
@@ -52,6 +53,7 @@ function Chip({ todo }: { todo: Todo }) {
       initial={{ opacity: 0, scale: 0.85 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={springs.pop}
+      style={!todo.completed && !todo.priority && todo.project ? { backgroundColor: PALETTE[projectHue(todo.project)] } : undefined}
       className={`block origin-left rounded-md px-1.5 py-0.5 text-xs font-semibold leading-4 max-sm:h-1.5 max-sm:rounded-full max-sm:p-0 ${toneOf(todo)}`}
     >
       <span className="line-clamp-2 break-words max-sm:hidden">{todo.text}</span>
@@ -118,7 +120,7 @@ export function CalendarView({ t, todos, today, onAdd, ...handlers }: CalendarVi
         </div>
 
         <div className="mb-3 flex items-center justify-between gap-3 px-1">
-          <h2 className="whitespace-nowrap font-hand text-3xl capitalize leading-none sm:text-5xl">{monthLabel}</h2>
+          <h2 className="whitespace-nowrap font-hand text-3xl first-letter:uppercase leading-none sm:text-5xl">{monthLabel}</h2>
           <div className="flex items-center gap-1">
             <motion.button type="button" aria-label={t.calendar.prev} onClick={() => shift(-1)} className={nav} {...hoverProps}>
               <ChevronIcon dir="left" />
@@ -156,7 +158,7 @@ export function CalendarView({ t, todos, today, onAdd, ...handlers }: CalendarVi
                 animate={{ opacity: inMonth ? 1 : 0.45, y: 0 }}
                 transition={{ ...springs.snappy, delay: i * 0.008 }}
                 className={`group relative flex min-h-[5.25rem] flex-col gap-1 rounded-2xl p-1.5 pb-4 shadow-[0_1px_0_var(--color-line)] transition-colors hover:bg-paper sm:min-h-28 sm:p-2 ${
-                  weekend ? 'bg-paper/55' : 'bg-paper/85'
+                  weekend ? 'bg-[#8fd3ff]/15' : 'bg-paper/85'
                 }`}
               >
                 <button
@@ -173,8 +175,8 @@ export function CalendarView({ t, todos, today, onAdd, ...handlers }: CalendarVi
                   {iso === today && (
                     <motion.span
                       aria-hidden="true"
-                      className="absolute -inset-x-1.5 -inset-y-0.5 -rotate-3 rounded-[45%] bg-marker"
-                      style={{ filter: 'url(#rough-edge)' }}
+                      className="absolute -inset-x-1.5 -inset-y-0.5 -rotate-3 rounded-[45%]"
+                      style={{ filter: 'url(#rough-edge)', backgroundColor: PALETTE.green }}
                       animate={{ scale: [1, 1.1, 1] }}
                       transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
                     />
@@ -210,12 +212,13 @@ export function CalendarView({ t, todos, today, onAdd, ...handlers }: CalendarVi
               {l.label}
             </span>
           ))}
+          <span>{t.calendar.byProject}</span>
         </div>
       </div>
 
       <section id="day-panel" className="mt-8 scroll-mt-4" aria-label={longDay}>
         <div className="flex items-end justify-between gap-3 border-b border-line pb-2">
-          <h2 className="font-hand text-4xl capitalize leading-none">{longDay}</h2>
+          <h2 className="font-hand text-4xl first-letter:uppercase leading-none">{longDay}</h2>
           <span className="pb-0.5 text-sm font-semibold text-ink-2">{t.tasksCount(dayTodos.length)}</span>
         </div>
         {dayTodos.length > 0 ? (

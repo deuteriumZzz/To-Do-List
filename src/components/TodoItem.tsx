@@ -1,8 +1,9 @@
 import { motion } from 'motion/react'
 import { useState } from 'react'
-import { formatDue, type ISODate } from '../dates'
+import { addDays, formatDue, type ISODate } from '../dates'
 import type { Messages } from '../i18n'
 import { hoverProps, springs } from '../motion'
+import { PALETTE, painted, projectHue } from '../palette'
 import { isOverdue, type Todo } from '../todos'
 import { Burst } from './Burst'
 import { DateButton } from './DatePicker'
@@ -83,7 +84,7 @@ export function TodoItem({ t, todo, today, onToggle, onRemove, onEdit, onPriorit
               stroke="#141413"
               strokeWidth="1.8"
               initial={false}
-              animate={{ fill: todo.completed ? '#ffe14d' : 'rgba(255,225,77,0)' }}
+              animate={{ fill: todo.completed ? PALETTE[todo.project ? projectHue(todo.project) : 'yellow'] : 'rgba(255,255,255,0)' }}
             />
             {!todo.completed && (
               <path
@@ -132,12 +133,16 @@ export function TodoItem({ t, todo, today, onToggle, onRemove, onEdit, onPriorit
           {(todo.due || todo.project) && (
             <div className="mt-1 flex flex-wrap items-center gap-x-3 font-hand text-[17px] leading-none">
               {todo.due && (
-                <span className={`inline-flex items-center gap-1 ${overdue ? 'text-danger' : todo.due === today ? 'text-ok' : 'text-ink-2'}`}>
+                <span className={`inline-flex items-center gap-1 ${overdue ? 'text-danger' : todo.due === today ? 'text-ok' : todo.due === addDays(today, 1) ? 'text-sky-ink' : 'text-ink-2'}`}>
                   <CalendarIcon className="size-3.5" />
                   {formatDue(todo.due, today, t.locale, t)}
                 </span>
               )}
-              {todo.project && <span className="text-ink-2">#{todo.project}</span>}
+              {todo.project && (
+                <span className="marker px-1" style={painted(projectHue(todo.project))}>
+                  #{todo.project}
+                </span>
+              )}
             </div>
           )}
         </div>

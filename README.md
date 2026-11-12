@@ -15,7 +15,7 @@ A to-do list that feels like pen and paper. Built with React and TypeScript; eve
 - Views: All, Today (includes overdue), Upcoming (grouped by day), Active, Completed
 - Month calendar drawn as a spiral-notebook page: tasks are written right on their days (priority in highlighter), arrow keys to move between days, hover a day for a quick + to add a task to it, click a day to circle it and see its tasks
 - A notebook-style date picker with quick chips (Today, Tomorrow, Next week, No date) instead of the browser default
-- Projects, created simply by writing `#name` in a task
+- Projects, created simply by writing `#name` in a task; every project gets its own highlighter colour, used on its tag, checkbox, sidebar entry and calendar notes
 - Priority tasks are highlighted with a marker and listed first
 - Search
 
@@ -26,6 +26,7 @@ A to-do list that feels like pen and paper. Built with React and TypeScript; eve
 **Feel**
 - Russian and English interface (Russian first and by default, English for English-language browsers; switchable and remembered)
 - Tick, the mascot: a check mark with one eye that follows the pointer and hops when you finish a task
+- A stationery colour code: yellow = important, green = today, blue = tomorrow, red = overdue; each section has its own highlight colour and the progress strip changes colour as the day goes on
 - Hand-drawn checkboxes, brush-stroke highlighter, handwritten dates; finishing a task crosses it out with an uneven pen stroke that is drawn across the text
 - Every icon has its own hover animation (the bin lifts its lid, the calendar flips, the pencil writes, ...); swipe a task left to delete, right to complete
 - Keyboard: `/` opens the add form from anywhere, `Esc` closes it or clears the search

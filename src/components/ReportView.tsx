@@ -2,6 +2,7 @@ import { motion } from 'motion/react'
 import { fromISO, type ISODate } from '../dates'
 import type { Messages } from '../i18n'
 import { springs } from '../motion'
+import { painted, type Hue } from '../palette'
 import type { Report } from '../report'
 import { Tick } from './Tick'
 
@@ -14,10 +15,10 @@ interface ReportViewProps {
 export function ReportView({ t, report, today }: ReportViewProps) {
   const max = Math.max(1, ...report.days.map((d) => d.count))
   const tiles = [
-    { label: t.report.today, value: report.completedToday },
-    { label: t.report.week, value: report.completedWeek },
-    { label: t.report.streak, value: report.streak, highlight: report.streak > 0 },
-    { label: t.report.rate, value: `${report.rate}%` },
+    { label: t.report.today, value: report.completedToday, hue: 'green' as Hue },
+    { label: t.report.week, value: report.completedWeek, hue: 'sky' as Hue },
+    { label: t.report.streak, value: report.streak, hue: 'orange' as Hue },
+    { label: t.report.rate, value: `${report.rate}%`, hue: 'pink' as Hue },
   ]
   const dayLabel = (iso: ISODate) =>
     new Intl.DateTimeFormat(t.locale, { weekday: 'long', day: 'numeric', month: 'long' }).format(fromISO(iso))
@@ -29,7 +30,7 @@ export function ReportView({ t, report, today }: ReportViewProps) {
         {tiles.map((tile) => (
           <div key={tile.label} className="rounded-2xl border border-line p-4">
             <dd className="text-4xl font-extrabold leading-none tabular-nums">
-              <span className="marker -mx-1 px-1 leading-[1.2]" style={{ backgroundSize: tile.highlight ? '100% 100%' : '0% 100%' }}>
+              <span className="marker -mx-1 px-1 leading-[1.2]" style={painted(tile.hue)}>
                 {tile.value}
               </span>
             </dd>
@@ -71,7 +72,7 @@ export function ReportView({ t, report, today }: ReportViewProps) {
                 </span>
                 <span
                   className={`mt-2 text-xs font-bold uppercase tracking-wide ${isToday ? 'marker' : 'text-ink-2'}`}
-                  style={isToday ? { backgroundSize: '100% 100%' } : undefined}
+                  style={isToday ? painted('green') : undefined}
                 >
                   {short(d.date)}
                 </span>

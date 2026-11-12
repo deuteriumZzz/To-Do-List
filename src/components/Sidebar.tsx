@@ -1,6 +1,7 @@
 import { motion } from 'motion/react'
 import type { Lang, Messages } from '../i18n'
 import { hoverProps, springs } from '../motion'
+import { PALETTE, VIEW_HUES, painted, projectHue, type Hue } from '../palette'
 import { LIST_VIEWS, type ListView, type View } from '../todos'
 import { NavIcon, PlusIcon } from './icons'
 import { LangSwitch } from './LangSwitch'
@@ -28,7 +29,9 @@ export function Sidebar({ t, lang, onLang, view, project, counts, projects, chee
     `relative flex shrink-0 items-center gap-2.5 rounded-lg px-3 py-2 text-[15px] transition-colors ${
       selected ? 'font-bold text-ink' : 'font-medium text-ink-2 hover:text-ink'
     }`
-  const pill = <motion.span layoutId="nav-pill" transition={springs.snappy} className="absolute inset-0 rounded-lg bg-ink/10" />
+  const pill = (hue: Hue) => (
+    <motion.span layoutId="nav-pill" transition={springs.snappy} style={{ backgroundColor: PALETTE[hue] }} className="absolute inset-0 rounded-lg opacity-80" />
+  )
   const count = (n: number) => (
     <span aria-hidden="true" className="relative pl-1 text-xs font-semibold tabular-nums text-ink-2 md:ml-auto">
       {n}
@@ -71,7 +74,7 @@ export function Sidebar({ t, lang, onLang, view, project, counts, projects, chee
               className={item(selected)}
               {...hoverProps}
             >
-              {selected && pill}
+              {selected && pill(VIEW_HUES[v])}
               <NavIcon view={v} />
               <span className="relative">{t.nav[v]}</span>
               {isListView(v) && count(counts[v])}
@@ -93,11 +96,12 @@ export function Sidebar({ t, lang, onLang, view, project, counts, projects, chee
               className={item(selected)}
               {...hoverProps}
             >
-              {selected && pill}
+              {selected && pill(projectHue(p.name))}
               <motion.span
                 aria-hidden="true"
                 variants={{ rest: { rotate: 0, scale: 1 }, hover: { rotate: [0, -14, 10, 0], scale: 1.2, transition: { duration: 0.45 } } }}
-                className="relative w-5 text-center text-lg text-ink-2"
+                style={painted(projectHue(p.name))}
+                className="relative w-5 text-center text-lg text-ink"
               >
                 #
               </motion.span>

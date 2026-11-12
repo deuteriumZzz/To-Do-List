@@ -1,7 +1,8 @@
 import { motion } from 'motion/react'
 import { ease } from '../motion'
+import { PALETTE } from '../palette'
 
-const COLORS = ['#141413', '#ffe14d', '#1f7a3e', '#b8332a']
+const COLORS = ['#141413', PALETTE.yellow, PALETTE.pink, PALETTE.green, PALETTE.sky, PALETTE.orange]
 
 /** One-shot burst of tiny square sparks from the centre of the parent. */
 export function Burst({ count = 10, radius = 34 }: { count?: number; radius?: number }) {

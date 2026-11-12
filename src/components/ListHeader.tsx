@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { useState } from 'react'
 import type { Messages } from '../i18n'
 import { hoverProps, springs } from '../motion'
+import { PALETTE } from '../palette'
 import type { View } from '../todos'
 import { CloseIcon, SearchIcon } from './icons'
 
@@ -107,7 +108,8 @@ export function ListHeader({ t, view, project, dateLabel, isList, done, total, s
                 initial={false}
                 animate={{ x: `${(ratio - 1) * 100}%` }}
                 transition={springs.gentle}
-                className="highlighter absolute inset-0 rounded-full"
+                style={{ backgroundColor: ratio < 1 / 3 ? PALETTE.pink : ratio < 2 / 3 ? PALETTE.yellow : PALETTE.green }}
+                className="highlighter absolute inset-0 rounded-full transition-colors duration-500"
               />
             </div>
             <span className="min-w-[3.2ch] text-right font-hand text-4xl leading-none tabular-nums">{percent}%</span>

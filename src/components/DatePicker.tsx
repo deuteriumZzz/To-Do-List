@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom'
 import { addDays, fromISO, monthGrid, weekdayNames, type ISODate } from '../dates'
 import type { Messages } from '../i18n'
 import { hoverProps, springs } from '../motion'
+import { PALETTE, painted, type Hue } from '../palette'
 import { ChevronIcon } from './icons'
 
 const POPOVER_W = 288
@@ -104,10 +105,10 @@ function DatePicker({ t, today, value, pos, onPick, onClose }: DatePickerProps) 
     setCursor({ year: d.getFullYear(), month: d.getMonth() })
   }
 
-  const quick: { label: string; date: ISODate | null }[] = [
-    { label: t.today, date: today },
-    { label: t.tomorrow, date: addDays(today, 1) },
-    { label: t.nextWeek, date: addDays(today, 7) },
+  const quick: { label: string; date: ISODate | null; hue?: Hue }[] = [
+    { label: t.today, date: today, hue: 'green' },
+    { label: t.tomorrow, date: addDays(today, 1), hue: 'sky' },
+    { label: t.nextWeek, date: addDays(today, 7), hue: 'orange' },
     { label: t.noDate, date: null },
   ]
   const arrow = 'grid size-8 place-items-center rounded-full hover:bg-ink/10'
@@ -133,7 +134,7 @@ function DatePicker({ t, today, value, pos, onPick, onClose }: DatePickerProps) 
       </div>
 
       <div className="mb-2 flex items-center justify-between">
-        <span className="font-hand text-3xl capitalize leading-none">{monthLabel}</span>
+        <span className="font-hand text-3xl first-letter:uppercase leading-none">{monthLabel}</span>
         <span className="flex">
           <motion.button type="button" aria-label={t.calendar.prev} onClick={() => shift(-1)} className={arrow} {...hoverProps}>
             <ChevronIcon dir="left" />
@@ -166,7 +167,7 @@ function DatePicker({ t, today, value, pos, onPick, onClose }: DatePickerProps) 
                 inMonth ? '' : 'text-ink-2/40'
               } ${selected ? 'bg-ink text-paper hover:bg-ink' : ''}`}
             >
-              <span className={isToday ? 'marker px-1' : ''} style={isToday ? { backgroundSize: '100% 100%' } : undefined}>
+              <span className={isToday ? 'marker px-1' : ''} style={isToday ? painted('green') : undefined}>
                 {Number(iso.slice(8))}
               </span>
             </button>
@@ -180,6 +181,7 @@ function DatePicker({ t, today, value, pos, onPick, onClose }: DatePickerProps) 
             key={q.label}
             type="button"
             onClick={() => onPick(q.date)}
+            style={q.hue ? { backgroundColor: PALETTE[q.hue] } : undefined}
             className={`rounded-full border border-ink/25 px-3 py-1 text-sm font-semibold hover:bg-ink/10 ${q.date === null ? 'text-ink-2' : ''}`}
           >
             {q.label}
