@@ -40,7 +40,6 @@ Plan your days in a notebook-style app: a calendar, a productivity report, quick
 - [Browser support](#browser-support)
 - [What is not included](#what-is-not-included)
 - [Deploying](#deploying)
-- [Built with AI](#built-with-ai)
 - [License](#license)
 
 ## Why Tickle
@@ -240,10 +239,6 @@ Tickle is a client-only app by design. These are deliberately out of scope:
 ## Deploying
 
 Tickle is a static site, so any static host works. On [Vercel](https://vercel.com), import the repository: the Vite preset is detected automatically (build command `npm run build`, output directory `dist`). Netlify, GitHub Pages and Cloudflare Pages work the same way.
-
-## Built with AI
-
-This project was built with [Claude Code](https://claude.com/claude-code) (Anthropic). Claude Code wrote the code, the tests, this README and the repository preview image from a written specification and a long series of design conversations. Design decisions were made by a human, and the result was checked in a browser and with the automated tests above.
 
 ## License
 
