@@ -21,13 +21,13 @@ A to-do list that feels like pen and paper. Built with React and TypeScript; eve
 
 **Quick add**, understood anywhere in the text: `!` at the start flags a task as priority, `#family` sets the project, `today` / `tomorrow` (`сегодня` / `завтра`) or `2026-12-24` sets the date, `18:30`, `6:30pm` or `в 18:30` sets the time. Example: `!Call mum tomorrow at 18:30 #family`. The recognised parts show up as chips under the input.
 
-**Report**: tasks completed today and over the last 7 days, day streak, completion rate, overdue and due-today counts, and a 7-day bar chart (with a screen-reader table).
+**Report**: sticky notes taped to the page with tasks done today and over the last 7 days, day streak and completion rate (a hand-drawn ring), overdue and due-today stamps, and a 7-day brush-stroke bar chart on a ruled notebook page (with a screen-reader table).
 
 **Feel**
 - Russian and English interface (Russian first and by default, English for English-language browsers; switchable and remembered)
 - Tick, the mascot: a check mark with one eye that follows the pointer and hops when you finish a task
 - A stationery colour code: yellow = important, green = today, blue = tomorrow, red = overdue; each section has its own highlight colour and the progress strip changes colour as the day goes on
-- Hand-drawn checkboxes, brush-stroke highlighter, handwritten dates; finishing a task crosses it out with an uneven pen stroke that is drawn across the text
+- Hand-drawn checkboxes, brush-stroke highlighter used for important tasks, calendar notes, tags and the selected menu item (painted on left to right), handwritten dates; finishing a task crosses it out with an uneven pen stroke that is drawn across the text
 - Every icon has its own hover animation (the bin lifts its lid, the calendar flips, the pencil writes, ...); swipe a task left to delete, right to complete
 - Keyboard: `/` opens the add form from anywhere, `Esc` closes it or clears the search
 - Responsive layout (sidebar on desktop, top bar on mobile); motion respects `prefers-reduced-motion`

@@ -1,7 +1,7 @@
 import { motion } from 'motion/react'
 import type { Lang, Messages } from '../i18n'
-import { hoverProps, springs } from '../motion'
-import { PALETTE, VIEW_HUES, painted, projectHue, type Hue } from '../palette'
+import { hoverProps } from '../motion'
+import { PALETTE, VIEW_HUES, painted, paintedBlock, projectHue, type Hue } from '../palette'
 import { LIST_VIEWS, type ListView, type View } from '../todos'
 import { NavIcon, PlusIcon } from './icons'
 import { LangSwitch } from './LangSwitch'
@@ -29,8 +29,13 @@ export function Sidebar({ t, lang, onLang, view, project, counts, projects, chee
     `relative flex shrink-0 items-center gap-2.5 rounded-lg px-3 py-2 text-[15px] transition-colors ${
       selected ? 'font-bold text-ink' : 'font-medium text-ink-2 hover:text-ink'
     }`
-  const pill = (hue: Hue) => (
-    <motion.span layoutId="nav-pill" transition={springs.snappy} style={{ backgroundColor: PALETTE[hue] }} className="absolute inset-0 rounded-lg opacity-80" />
+  /** A brush stroke behind the item: painted on from left to right when selected, wiped off when not. */
+  const patch = (selected: boolean, hue: Hue) => (
+    <span
+      aria-hidden="true"
+      className="pointer-events-none absolute -inset-x-1 inset-y-0 transition-[background-size] duration-500 ease-out motion-reduce:transition-none"
+      style={{ ...paintedBlock(PALETTE[hue]), backgroundSize: selected ? '100% 100%' : '0% 100%', backgroundPosition: 'left center' }}
+    />
   )
   const count = (n: number) => (
     <span aria-hidden="true" className="relative pl-1 text-xs font-semibold tabular-nums text-ink-2 md:ml-auto">
@@ -74,7 +79,7 @@ export function Sidebar({ t, lang, onLang, view, project, counts, projects, chee
               className={item(selected)}
               {...hoverProps}
             >
-              {selected && pill(VIEW_HUES[v])}
+              {patch(selected, VIEW_HUES[v])}
               <NavIcon view={v} />
               <span className="relative">{t.nav[v]}</span>
               {isListView(v) && count(counts[v])}
@@ -96,7 +101,7 @@ export function Sidebar({ t, lang, onLang, view, project, counts, projects, chee
               className={item(selected)}
               {...hoverProps}
             >
-              {selected && pill(projectHue(p.name))}
+              {patch(selected, projectHue(p.name))}
               <motion.span
                 aria-hidden="true"
                 variants={{ rest: { rotate: 0, scale: 1 }, hover: { rotate: [0, -14, 10, 0], scale: 1.2, transition: { duration: 0.45 } } }}

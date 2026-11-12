@@ -82,7 +82,7 @@ const en = {
     chartHint: (n: number, date: string) => `${date}: ${n} completed`,
     tableDay: 'Day',
     tableDone: 'Completed',
-    empty: 'Complete a task and your week starts to fill in here.',
+    cheer: (n: number) => (n > 0 ? `${n}-day streak. Keep it going!` : 'Finish a task today to start a streak.'),
   },
   noResults: { title: 'No matches', hint: 'Try another word.' },
   empty: {
@@ -184,7 +184,7 @@ const ru: Messages = {
     chartHint: (n, date) => `${date}: выполнено ${n}`,
     tableDay: 'День',
     tableDone: 'Выполнено',
-    empty: 'Выполните задачу, и здесь начнёт заполняться ваша неделя.',
+    cheer: (n) => (n > 0 ? `Серия: ${n} дн. Так держать!` : 'Выполните задачу сегодня, чтобы начать серию.'),
   },
   noResults: { title: 'Ничего не найдено', hint: 'Попробуйте другое слово.' },
   empty: {

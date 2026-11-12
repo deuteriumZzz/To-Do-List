@@ -3,7 +3,7 @@ import { useEffect, useState, type SubmitEvent } from 'react'
 import { addDays, formatDue, formatTime, parseQuickAdd, type ISODate, type Time } from '../dates'
 import type { Messages } from '../i18n'
 import { hoverProps, springs } from '../motion'
-import { PALETTE, projectHue, type Hue } from '../palette'
+import { PALETTE, paintedBlock, projectHue, type Hue } from '../palette'
 import { MAX_LENGTH } from '../todos'
 import { DateButton } from './DatePicker'
 import { CalendarIcon, PlusIcon, StarIcon } from './icons'
@@ -21,7 +21,7 @@ interface AddTaskProps {
 
 const TAPES: Hue[] = ['yellow', 'pink', 'green', 'sky', 'orange', 'lilac']
 
-const tag = 'inline-flex items-center gap-1 rounded-full bg-ink/10 px-2.5 py-1 text-[13px] font-semibold leading-none'
+const tag = 'inline-flex items-center gap-1 px-3 py-1.5 text-[13px] font-semibold leading-none'
 
 /** A note page taped into the notebook: same paper, pen underline and handwriting as the rest. */
 function AddForm({ t, today, onClose, defaultDue, onAdd }: Omit<AddTaskProps, 'open' | 'onOpen'>) {
@@ -104,7 +104,7 @@ function AddForm({ t, today, onClose, defaultDue, onAdd }: Omit<AddTaskProps, 'o
         {due && (
           <span
             className={tag}
-            style={due === today ? { backgroundColor: PALETTE.green } : due === addDays(today, 1) ? { backgroundColor: PALETTE.sky } : undefined}
+            style={paintedBlock(due === today ? PALETTE.green : due === addDays(today, 1) ? PALETTE.sky : '#dcd7ca')}
           >
             <CalendarIcon className="size-3.5" />
             {formatDue(due, today, t.locale, t)}
@@ -112,7 +112,7 @@ function AddForm({ t, today, onClose, defaultDue, onAdd }: Omit<AddTaskProps, 'o
           </span>
         )}
         {parsed.project && (
-          <span className={tag} style={{ backgroundColor: PALETTE[projectHue(parsed.project)] }}>
+          <span className={tag} style={paintedBlock(PALETTE[projectHue(parsed.project)])}>
             #{parsed.project}
           </span>
         )}

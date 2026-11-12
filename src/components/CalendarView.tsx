@@ -3,7 +3,7 @@ import { useRef, useState, type KeyboardEvent } from 'react'
 import { addDays, formatTime, fromISO, monthGrid, weekdayNames, type ISODate, type Time } from '../dates'
 import type { Messages } from '../i18n'
 import { hoverProps, springs } from '../motion'
-import { PALETTE, projectHue } from '../palette'
+import { PALETTE, paintedBlock, projectHue } from '../palette'
 import type { Todo } from '../todos'
 import { AddTask } from './AddTask'
 import { ChevronIcon, PlusIcon } from './icons'
@@ -40,22 +40,22 @@ function PenRing() {
 const rank = (t: Todo) => (t.completed ? 2 : t.priority ? 0 : 1)
 const byTimeThenRank = (a: Todo, b: Todo) => (a.time ?? '99:99').localeCompare(b.time ?? '99:99') || rank(a) - rank(b)
 
-const TONES = {
-  active: 'bg-ink/[0.1] max-sm:bg-ink/70',
-  priority: 'bg-marker max-sm:ring-1 max-sm:ring-ink/60',
-  done: 'text-ink-2 line-through ring-1 ring-inset ring-ink/15 max-sm:bg-ink/20 max-sm:ring-0',
-}
-const toneOf = (todo: Todo) => (todo.completed ? TONES.done : todo.priority ? TONES.priority : TONES.active)
+const GREY = '#dcd7ca'
+const DONE = '#e9e5da'
 
-/** A task written on its day: a colour-coded note, a thin bar on narrow screens. */
+/** Brush colour of a task on the calendar: yellow = important, project colour, otherwise grey. */
+const colorOf = (todo: Todo) =>
+  todo.completed ? DONE : todo.priority ? PALETTE.yellow : todo.project ? PALETTE[projectHue(todo.project)] : GREY
+
+/** A task written on its day with a marker; a thin brush stroke on narrow screens. */
 function Chip({ todo, locale }: { todo: Todo; locale: string }) {
   return (
     <motion.span
       initial={{ opacity: 0, scale: 0.85 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={springs.pop}
-      style={!todo.completed && !todo.priority && todo.project ? { backgroundColor: PALETTE[projectHue(todo.project)] } : undefined}
-      className={`block origin-left rounded-md px-1.5 py-0.5 text-xs font-semibold leading-4 max-sm:h-1.5 max-sm:rounded-full max-sm:p-0 ${toneOf(todo)}`}
+      style={paintedBlock(colorOf(todo))}
+      className={`block origin-left px-2 py-1.5 text-xs font-semibold leading-4 max-sm:h-2.5 max-sm:p-0 ${todo.completed ? 'text-ink-2 line-through' : ''}`}
     >
       <span className="line-clamp-3 hyphens-auto max-sm:hidden">
         {todo.time && <b className="block font-bold tabular-nums opacity-70">{formatTime(todo.time, locale)}</b>}
@@ -108,9 +108,9 @@ export function CalendarView({ t, todos, today, onAdd, ...handlers }: CalendarVi
 
   const nav = 'grid size-9 place-items-center rounded-full hover:bg-ink/10'
   const legend = [
-    { label: t.nav.active, tone: TONES.active },
-    { label: t.priority, tone: TONES.priority },
-    { label: t.nav.completed, tone: TONES.done },
+    { label: t.nav.active, color: GREY },
+    { label: t.priority, color: PALETTE.yellow },
+    { label: t.nav.completed, color: DONE },
   ]
 
   return (
@@ -179,8 +179,8 @@ export function CalendarView({ t, todos, today, onAdd, ...handlers }: CalendarVi
                   {iso === today && (
                     <motion.span
                       aria-hidden="true"
-                      className="absolute -inset-x-1.5 -inset-y-0.5 -rotate-3 rounded-[45%]"
-                      style={{ filter: 'url(#rough-edge)', backgroundColor: PALETTE.green }}
+                      className="absolute -inset-x-2 -inset-y-1 -rotate-3"
+                      style={paintedBlock(PALETTE.green)}
                     />
                   )}
                   <span className="relative font-hand text-2xl font-bold leading-none tabular-nums">{Number(iso.slice(8))}</span>
@@ -210,7 +210,7 @@ export function CalendarView({ t, todos, today, onAdd, ...handlers }: CalendarVi
         <div className="mt-3 hidden flex-wrap items-center justify-center gap-x-5 gap-y-1 font-hand text-lg leading-none text-ink-2 sm:flex">
           {legend.map((l) => (
             <span key={l.label} className="inline-flex items-center gap-1.5">
-              <span className={`h-3.5 w-6 rounded-md ${l.tone.replace(/max-sm:\S+/g, '')}`} />
+              <span className="h-4 w-8" style={paintedBlock(l.color)} />
               {l.label}
             </span>
           ))}

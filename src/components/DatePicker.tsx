@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom'
 import { addDays, formatTime, fromISO, monthGrid, weekdayNames, type ISODate, type Time } from '../dates'
 import type { Messages } from '../i18n'
 import { hoverProps, springs } from '../motion'
-import { PALETTE, painted, type Hue } from '../palette'
+import { PALETTE, painted, paintedBlock, type Hue } from '../palette'
 import { ChevronIcon } from './icons'
 
 const POPOVER_W = 304
@@ -212,8 +212,8 @@ function DatePicker({ t, today, value, time, pos, onPick, onTime, onClose }: Dat
             key={q.label}
             type="button"
             onClick={() => onPick(q.date)}
-            style={q.hue ? { backgroundColor: PALETTE[q.hue] } : undefined}
-            className={`${chip} ${q.date === null ? 'text-ink-2' : ''}`}
+            style={q.hue ? paintedBlock(PALETTE[q.hue]) : undefined}
+            className={`${chip} ${q.hue ? 'border-transparent' : ''} ${q.date === null ? 'text-ink-2' : ''}`}
           >
             {q.label}
           </button>
