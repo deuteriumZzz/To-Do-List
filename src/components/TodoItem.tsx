@@ -128,7 +128,7 @@ export function TodoItem({ t, todo, today, onToggle, onRemove, onEdit, onPriorit
                 if (e.key === 'Enter') finishEdit(true)
                 if (e.key === 'Escape') finishEdit(false)
               }}
-              className="w-full border-b-2 border-ink bg-transparent py-0.5 font-serif text-[17px] focus:outline-none"
+              className="w-full border-b-2 border-ink bg-transparent py-0.5 text-base focus:outline-none"
             />
           )}
           {(todo.due || todo.project) && (

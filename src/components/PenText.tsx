@@ -87,7 +87,7 @@ export function PenText({ text, seed, struck, highlighted, onClick }: PenTextPro
       <span
         ref={label}
         style={{ backgroundSize: highlighted ? '100% 100%' : '0% 100%' }}
-        className={`marker font-serif text-[17px] leading-snug transition-colors duration-300 ${struck ? 'text-ink-2' : ''}`}
+        className={`marker text-base leading-snug transition-colors duration-300 ${struck ? 'text-ink-2' : ''}`}
       >
         {text}
       </span>
