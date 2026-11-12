@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { loadTodos, saveTodos, STORAGE_KEY } from './storage'
+import { LANG_KEY, loadLang, loadTodos, saveLang, saveTodos, STORAGE_KEY } from './storage'
 
 const valid = { id: 'a', text: 'task', completed: false, createdAt: 1 }
 
@@ -33,6 +33,16 @@ describe('loadTodos', () => {
       throw new Error('blocked')
     })
     expect(loadTodos()).toEqual({ todos: [], available: false })
+  })
+})
+
+describe('language storage', () => {
+  it('round-trips a valid language and ignores junk', () => {
+    expect(loadLang()).toBeNull()
+    saveLang('ru')
+    expect(loadLang()).toBe('ru')
+    localStorage.setItem(LANG_KEY, 'de')
+    expect(loadLang()).toBeNull()
   })
 })
 

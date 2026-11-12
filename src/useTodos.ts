@@ -26,5 +26,6 @@ export function useTodos() {
     },
     toggle: (id: string) => apply({ type: 'toggle', id }),
     remove: (id: string) => apply({ type: 'remove', id }),
+    clearCompleted: () => apply({ type: 'clearCompleted' }),
   }
 }

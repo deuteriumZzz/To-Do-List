@@ -1,6 +1,26 @@
+import { isLang, type Lang } from './i18n'
 import type { Todo } from './todos'
 
 export const STORAGE_KEY = 'todo-list:v1'
+export const LANG_KEY = 'todo-list:lang'
+
+/** Saved interface language, or null if none or storage is unavailable. */
+export function loadLang(): Lang | null {
+  try {
+    const value = localStorage.getItem(LANG_KEY)
+    return isLang(value) ? value : null
+  } catch {
+    return null
+  }
+}
+
+export function saveLang(lang: Lang): void {
+  try {
+    localStorage.setItem(LANG_KEY, lang)
+  } catch {
+    // the language simply is not remembered
+  }
+}
 
 function isTodo(value: unknown): value is Todo {
   if (typeof value !== 'object' || value === null) return false

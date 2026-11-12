@@ -29,6 +29,11 @@ describe('todosReducer', () => {
   it('removes only the target task', () => {
     expect(todosReducer([todo('a'), todo('b')], { type: 'remove', id: 'a' }).map((t) => t.id)).toEqual(['b'])
   })
+
+  it('clears only completed tasks', () => {
+    const list = [todo('a'), todo('b', true)]
+    expect(todosReducer(list, { type: 'clearCompleted' }).map((t) => t.id)).toEqual(['a'])
+  })
 })
 
 describe('filterTodos / getStats', () => {
