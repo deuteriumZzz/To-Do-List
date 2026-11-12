@@ -10,6 +10,10 @@ A small, clean task manager built with React and TypeScript. Tasks are saved in 
 - Filter by All / Active / Completed
 - Live statistics: total, active and done
 - Friendly empty states for an empty list and for filters with no results
+- English and Russian interface (follows the browser language, switchable and remembered)
+- "Clear completed" action and an animated progress overview
+- Motion design: staggered entrance, springy list transitions, animated checkmark, swipe-left to delete, celebration when everything is done (respects `prefers-reduced-motion`)
+- Light and dark theme (follows the system setting)
 - Responsive layout, keyboard-friendly, visible focus states
 - Tasks persist in `localStorage`
 
@@ -18,6 +22,7 @@ A small, clean task manager built with React and TypeScript. Tasks are saved in 
 - [React](https://react.dev) 19 + TypeScript
 - [Vite](https://vite.dev)
 - [Tailwind CSS](https://tailwindcss.com) v4
+- [Motion](https://motion.dev) for animations
 - [Vitest](https://vitest.dev) + React Testing Library
 - [Oxlint](https://oxc.rs/docs/guide/usage/linter) for linting
 
@@ -52,6 +57,7 @@ Tasks are kept in `localStorage` under the key `todo-list:v1` as a JSON array of
 - Saved data is read and validated before the first render, so it is never overwritten by an empty list.
 - Corrupted JSON, non-array data and malformed items are ignored instead of crashing the app.
 - If the browser blocks storage, the app keeps working for the current session and shows a notice that tasks will not be saved.
+- The chosen language is stored separately under `todo-list:lang` (`"en"` or `"ru"`).
 
 ## Project structure
 
@@ -61,7 +67,10 @@ src/
   useTodos.ts        state + persistence hook
   todos.ts           types and pure task logic
   storage.ts         localStorage read/write with validation
-  components/        AddTodoForm, Filters, Stats, TodoItem
+  i18n.ts            English and Russian strings
+  motion.ts          shared spring and easing tokens
+  components/        AddTodoForm, Filters, Stats, TodoItem, EmptyState,
+                     Celebration, Background, LangSwitch
 ```
 
 ## Deploying
