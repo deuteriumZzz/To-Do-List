@@ -1,27 +1,33 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { addDays, fromISO, monthGrid, weekdayNames, type ISODate } from '../dates'
+import { addDays, formatTime, fromISO, monthGrid, weekdayNames, type ISODate, type Time } from '../dates'
 import type { Messages } from '../i18n'
 import { hoverProps, springs } from '../motion'
 import { PALETTE, painted, type Hue } from '../palette'
 import { ChevronIcon } from './icons'
 
-const POPOVER_W = 288
-const POPOVER_H = 380
+const POPOVER_W = 304
+const POPOVER_H = 600
+const QUICK_TIMES: Time[] = ['09:00', '12:00', '15:00', '18:00', '21:00']
+const DEFAULT_TIME: Time = '09:00'
+
+const pad = (n: number) => String(n).padStart(2, '0')
 
 interface DateButtonProps {
   t: Messages
   today: ISODate
   value?: ISODate
+  time?: Time
   label: string
   className: string
   onChange: (date: ISODate | null) => void
+  onTime: (time: Time | null) => void
   children: ReactNode
 }
 
-/** Icon button that opens a notebook-style date picker next to it. */
-export function DateButton({ t, today, value, label, className, onChange, children }: DateButtonProps) {
+/** Icon button that opens a notebook-style date and time picker next to it. */
+export function DateButton({ t, today, value, time, label, className, onChange, onTime, children }: DateButtonProps) {
   const button = useRef<HTMLButtonElement>(null)
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null)
 
@@ -32,6 +38,11 @@ export function DateButton({ t, today, value, label, className, onChange, childr
     const below = r.bottom + 8
     const top = below + POPOVER_H > window.innerHeight ? Math.max(8, r.top - POPOVER_H - 8) : below
     setPos({ top, left })
+  }
+
+  function close() {
+    setPos(null)
+    button.current?.focus()
   }
 
   return (
@@ -47,16 +58,14 @@ export function DateButton({ t, today, value, label, className, onChange, childr
               t={t}
               today={today}
               value={value}
+              time={time}
               pos={pos}
               onPick={(date) => {
                 onChange(date)
-                setPos(null)
-                button.current?.focus()
+                close()
               }}
-              onClose={() => {
-                setPos(null)
-                button.current?.focus()
-              }}
+              onTime={onTime}
+              onClose={close}
             />
           )}
         </AnimatePresence>,
@@ -70,12 +79,32 @@ interface DatePickerProps {
   t: Messages
   today: ISODate
   value?: ISODate
+  time?: Time
   pos: { top: number; left: number }
   onPick: (date: ISODate | null) => void
+  onTime: (time: Time | null) => void
   onClose: () => void
 }
 
-function DatePicker({ t, today, value, pos, onPick, onClose }: DatePickerProps) {
+/** A number you nudge up and down with two small keys, wrapping around. */
+function Stepper({ label, value, size, step, t, onChange }: { label: string; value: number; size: number; step: number; t: Messages; onChange: (v: number) => void }) {
+  const key = 'grid size-8 place-items-center rounded-full text-lg font-bold leading-none hover:bg-ink/10'
+  return (
+    <div role="group" aria-label={label} className="flex items-center gap-0.5">
+      <button type="button" aria-label={t.time.dec(label)} onClick={() => onChange((value - step + size) % size)} className={key}>
+        −
+      </button>
+      <span aria-live="polite" className="w-8 text-center font-hand text-3xl leading-none tabular-nums">
+        {pad(value)}
+      </span>
+      <button type="button" aria-label={t.time.inc(label)} onClick={() => onChange((value + step) % size)} className={key}>
+        +
+      </button>
+    </div>
+  )
+}
+
+function DatePicker({ t, today, value, time, pos, onPick, onTime, onClose }: DatePickerProps) {
   const start = value ?? today
   const [cursor, setCursor] = useState({ year: Number(start.slice(0, 4)), month: Number(start.slice(5, 7)) - 1 })
   const panel = useRef<HTMLDivElement>(null)
@@ -99,6 +128,7 @@ function DatePicker({ t, today, value, pos, onPick, onClose }: DatePickerProps) 
   const weekStart = t.locale.startsWith('ru') ? 1 : 0
   const cells = monthGrid(cursor.year, cursor.month, weekStart)
   const monthLabel = new Intl.DateTimeFormat(t.locale, { month: 'long', year: 'numeric' }).format(new Date(cursor.year, cursor.month, 1))
+  const [hour, minute] = (time ?? DEFAULT_TIME).split(':').map(Number)
 
   function shift(delta: number) {
     const d = new Date(cursor.year, cursor.month + delta, 1)
@@ -112,6 +142,7 @@ function DatePicker({ t, today, value, pos, onPick, onClose }: DatePickerProps) 
     { label: t.noDate, date: null },
   ]
   const arrow = 'grid size-8 place-items-center rounded-full hover:bg-ink/10'
+  const chip = 'rounded-full border border-ink/25 px-3 py-1 text-sm font-semibold hover:bg-ink/10'
 
   return (
     <motion.div
@@ -134,7 +165,7 @@ function DatePicker({ t, today, value, pos, onPick, onClose }: DatePickerProps) 
       </div>
 
       <div className="mb-2 flex items-center justify-between">
-        <span className="font-hand text-3xl first-letter:uppercase leading-none">{monthLabel}</span>
+        <span className="font-hand text-3xl leading-none first-letter:uppercase">{monthLabel}</span>
         <span className="flex">
           <motion.button type="button" aria-label={t.calendar.prev} onClick={() => shift(-1)} className={arrow} {...hoverProps}>
             <ChevronIcon dir="left" />
@@ -182,11 +213,42 @@ function DatePicker({ t, today, value, pos, onPick, onClose }: DatePickerProps) 
             type="button"
             onClick={() => onPick(q.date)}
             style={q.hue ? { backgroundColor: PALETTE[q.hue] } : undefined}
-            className={`rounded-full border border-ink/25 px-3 py-1 text-sm font-semibold hover:bg-ink/10 ${q.date === null ? 'text-ink-2' : ''}`}
+            className={`${chip} ${q.date === null ? 'text-ink-2' : ''}`}
           >
             {q.label}
           </button>
         ))}
+      </div>
+
+      {/* time of day */}
+      <div className="mt-3 border-t border-dashed border-ink/25 pt-3">
+        <div className="flex items-center justify-between">
+          <span className="font-hand text-2xl leading-none">{t.time.title}</span>
+          <div className="flex items-center gap-1">
+            <Stepper label={t.time.hours} value={hour} size={24} step={1} t={t} onChange={(h) => onTime(`${pad(h)}:${pad(minute)}`)} />
+            <span aria-hidden="true" className="font-hand text-3xl leading-none">
+              :
+            </span>
+            <Stepper label={t.time.minutes} value={minute} size={60} step={5} t={t} onChange={(m) => onTime(`${pad(hour)}:${pad(m)}`)} />
+          </div>
+        </div>
+        <p className="mt-1 text-right text-xs text-ink-2">{time ? formatTime(time, t.locale) : t.time.none}</p>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {QUICK_TIMES.map((q) => (
+            <button
+              key={q}
+              type="button"
+              aria-pressed={time === q}
+              onClick={() => onTime(q)}
+              className={`${chip} tabular-nums ${time === q ? 'bg-ink text-paper hover:bg-ink' : ''}`}
+            >
+              {formatTime(q, t.locale)}
+            </button>
+          ))}
+          <button type="button" onClick={() => onTime(null)} className={`${chip} text-ink-2`}>
+            {t.time.none}
+          </button>
+        </div>
       </div>
     </motion.div>
   )

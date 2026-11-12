@@ -21,7 +21,7 @@ const TONES = { all: 'idle', today: 'idle', upcoming: 'idle', active: 'celebrate
 const isListView = (v: View): v is ListView => (LIST_VIEWS as View[]).includes(v)
 
 export default function App() {
-  const { todos, storageOk, undoState, add, edit, toggle, togglePriority, setDue, remove, clearCompleted, undo, dismissUndo } = useTodos()
+  const { todos, storageOk, undoState, add, edit, toggle, togglePriority, setDue, setTime, remove, clearCompleted, undo, dismissUndo } = useTodos()
   const [view, setView] = useState<View>('all')
   const [project, setProject] = useState<string | null>(null)
   const [search, setSearch] = useState('')
@@ -83,6 +83,7 @@ export default function App() {
     onEdit: edit,
     onPriority: togglePriority,
     onDue: setDue,
+    onTime: setTime,
   }
 
   const toastMessage =

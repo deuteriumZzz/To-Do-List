@@ -1,7 +1,19 @@
 /** Local calendar date as "YYYY-MM-DD" (no time zone surprises). */
 export type ISODate = string
 
+/** Time of day as "HH:MM" (24-hour, stored as typed by the user). */
+export type Time = string
+
 const pad = (n: number) => String(n).padStart(2, '0')
+
+export const isTime = (value: unknown): value is Time =>
+  typeof value === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(value)
+
+/** "18:30" shown the way the locale writes it ("6:30 PM" or "18:30"). */
+export function formatTime(time: Time, locale: string): string {
+  const [h, m] = time.split(':').map(Number)
+  return new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit' }).format(new Date(2000, 0, 1, h, m))
+}
 
 export function toISO(d: Date): ISODate {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
@@ -58,6 +70,7 @@ export interface QuickAdd {
   text: string
   priority: boolean
   due?: ISODate
+  time?: Time
   project?: string
 }
 
@@ -69,7 +82,7 @@ const DATE_WORDS: Record<string, number> = { today: 0, tomorrow: 1, сегодн
 /**
  * Quick-add syntax, understood anywhere in the text:
  * a leading `!` = priority, `#name` = project, `today` / `tomorrow` / `сегодня` / `завтра`
- * or an ISO date = due date. Recognised tokens are removed from the title.
+ * or an ISO date = due date, `18:30` / `at 6pm` / `в 18:30` = time. Recognised tokens are removed from the title.
  */
 export function parseQuickAdd(raw: string, today: ISODate): QuickAdd {
   let text = raw.trim()
@@ -94,5 +107,24 @@ export function parseQuickAdd(raw: string, today: ISODate): QuickAdd {
     },
   )
 
-  return { text: text.replace(/\s+/g, ' ').trim(), priority, due, project }
+  let time: Time | undefined
+  text = text.replace(new RegExp(`${START}(?:(?:at|в)\\s+)?(\\d{1,2}):(\\d{2})${SPACE_OR_END}`, 'iu'), (match: string, h: string, m: string) => {
+    if (Number(h) > 23 || Number(m) > 59) return match
+    time = `${h.padStart(2, '0')}:${m}`
+    return ''
+  })
+  if (!time) {
+    text = text.replace(
+      new RegExp(`${START}(?:at\\s+)?(\\d{1,2})(?::(\\d{2}))?\\s?(am|pm)${SPACE_OR_END}`, 'iu'),
+      (match: string, h: string, m: string | undefined, mark: string) => {
+        const hour = Number(h)
+        const minutes = m ?? '00'
+        if (hour < 1 || hour > 12 || Number(minutes) > 59) return match
+        time = `${pad((hour % 12) + (mark.toLowerCase() === 'pm' ? 12 : 0))}:${minutes}`
+        return ''
+      },
+    )
+  }
+
+  return { text: text.replace(/\s+/g, ' ').trim(), priority, due, time, project }
 }

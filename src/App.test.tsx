@@ -184,6 +184,28 @@ describe('date picker', () => {
   })
 })
 
+describe('time', () => {
+  it('reads a time from the title and shows it next to the date', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await addTask(user, 'Call mum tomorrow at 6:30pm')
+    expect(screen.getByLabelText('Call mum')).toBeInTheDocument()
+    expect(screen.getByText(/Tomorrow, 6:30\sPM/)).toBeInTheDocument()
+  })
+
+  it('sets a time with the quick chips of the picker', async () => {
+    seed({ text: 'Plan trip', due: today })
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Set date: Plan trip' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Due date' })
+    await user.click(within(dialog).getByRole('button', { name: /9:00\sAM/ }))
+    expect(await screen.findByText(/Today, 9:00\sAM/)).toBeInTheDocument()
+    await user.click(within(dialog).getByRole('button', { name: 'Hours: later' }))
+    expect(await screen.findByText(/Today, 10:00\sAM/)).toBeInTheDocument()
+  })
+})
+
 describe('language', () => {
   it('switches to Russian and remembers the choice', async () => {
     const user = userEvent.setup()

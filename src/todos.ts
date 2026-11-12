@@ -1,4 +1,4 @@
-import { parseQuickAdd, type ISODate } from './dates'
+import { parseQuickAdd, type ISODate, type Time } from './dates'
 
 export interface Todo {
   id: string
@@ -7,6 +7,8 @@ export interface Todo {
   /** Highlighted as important; active priority tasks are listed first. */
   priority?: boolean
   due?: ISODate
+  /** Time of day on the due date, "HH:MM". */
+  time?: Time
   /** Lower-case project name from a `#tag` in the title. */
   project?: string
   /** When the task was completed (ms), used by the productivity report. */
@@ -25,20 +27,23 @@ export type Action =
   | { type: 'toggle'; id: string; at: number }
   | { type: 'togglePriority'; id: string }
   | { type: 'setDue'; id: string; due: ISODate | null }
+  | { type: 'setTime'; id: string; time: Time | null; today: ISODate }
   | { type: 'edit'; id: string; text: string }
   | { type: 'remove'; id: string }
   | { type: 'clearCompleted' }
 
 /** Builds a todo from quick-add text, or returns null if no title is left. */
-export function createTodo(raw: string, today: ISODate, defaults: { due?: ISODate } = {}): Todo | null {
+export function createTodo(raw: string, today: ISODate, defaults: { due?: ISODate; time?: Time } = {}): Todo | null {
   const parsed = parseQuickAdd(raw, today)
   if (!parsed.text) return null
+  const time = parsed.time ?? defaults.time
   return {
     id: crypto.randomUUID(),
     text: parsed.text,
     completed: false,
     priority: parsed.priority,
-    due: parsed.due ?? defaults.due,
+    due: parsed.due ?? defaults.due ?? (time ? today : undefined),
+    time,
     project: parsed.project,
     createdAt: Date.now(),
   }
@@ -58,7 +63,9 @@ export function todosReducer(todos: Todo[], action: Action): Todo[] {
     case 'togglePriority':
       return patch(action.id, (t) => ({ ...t, priority: !t.priority }))
     case 'setDue':
-      return patch(action.id, (t) => ({ ...t, due: action.due ?? undefined }))
+      return patch(action.id, (t) => ({ ...t, due: action.due ?? undefined, time: action.due === null ? undefined : t.time }))
+    case 'setTime':
+      return patch(action.id, (t) => ({ ...t, time: action.time ?? undefined, due: action.time && !t.due ? action.today : t.due }))
     case 'edit':
       return patch(action.id, (t) => ({ ...t, text: action.text }))
     case 'remove':
@@ -100,7 +107,7 @@ export function selectTodos(todos: Todo[], { view, project, search, today }: Que
   })
   const byDate = view === 'today' || view === 'upcoming'
   return list.sort((a, b) => {
-    const date = byDate ? (a.due ?? '').localeCompare(b.due ?? '') : 0
+    const date = byDate ? (a.due ?? '').localeCompare(b.due ?? '') || (a.time ?? '99:99').localeCompare(b.time ?? '99:99') : 0
     return date || rank(b) - rank(a)
   })
 }

@@ -45,7 +45,7 @@ function SearchField({ t, value, onChange }: { t: Messages; value: string; onCha
           onKeyDown={(e) => {
             if (e.key === 'Escape') onChange('')
           }}
-          className="min-w-0 flex-1 bg-transparent font-hand text-2xl leading-none placeholder:text-ink-2/70 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
+          className="min-w-0 flex-1 bg-transparent text-base font-semibold leading-none placeholder:font-hand placeholder:text-2xl placeholder:font-normal placeholder:text-ink-2/70 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
         />
         <AnimatePresence>
           {value && (
@@ -112,7 +112,7 @@ export function ListHeader({ t, view, project, dateLabel, isList, done, total, s
                 className="highlighter absolute inset-0 rounded-full transition-colors duration-500"
               />
             </div>
-            <span className="min-w-[3.2ch] text-right font-hand text-4xl leading-none tabular-nums">{percent}%</span>
+            <span className="min-w-[3.2ch] text-right text-3xl font-extrabold leading-none tabular-nums">{percent}%</span>
           </div>
           <div className="mt-2 flex items-center justify-between text-sm text-ink-2">
             <span>{t.progress(done, total)}</span>

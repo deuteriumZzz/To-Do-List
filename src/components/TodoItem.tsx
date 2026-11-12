@@ -1,6 +1,6 @@
 import { motion } from 'motion/react'
 import { useState } from 'react'
-import { addDays, formatDue, type ISODate } from '../dates'
+import { addDays, formatDue, formatTime, type ISODate, type Time } from '../dates'
 import type { Messages } from '../i18n'
 import { hoverProps, springs } from '../motion'
 import { PALETTE, painted, projectHue } from '../palette'
@@ -16,6 +16,7 @@ export interface ItemHandlers {
   onEdit: (id: string, text: string) => boolean
   onPriority: (id: string) => void
   onDue: (id: string, due: ISODate | null) => void
+  onTime: (id: string, time: Time | null) => void
 }
 
 interface TodoItemProps extends ItemHandlers {
@@ -25,9 +26,9 @@ interface TodoItemProps extends ItemHandlers {
 }
 
 const iconButton =
-  'grid size-8 shrink-0 place-items-center rounded-lg text-ink-2 transition-colors hover:bg-ink/10 hover:text-ink focus-visible:opacity-100 group-focus-within:opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100'
+  'grid size-8 shrink-0 place-items-center rounded-lg text-ink-2 transition-colors hover:bg-ink/10 hover:text-ink focus-visible:opacity-100 group-focus-within:opacity-100 [@media(hover:hover)]:opacity-35 [@media(hover:hover)]:group-hover:opacity-100'
 
-export function TodoItem({ t, todo, today, onToggle, onRemove, onEdit, onPriority, onDue }: TodoItemProps) {
+export function TodoItem({ t, todo, today, onToggle, onRemove, onEdit, onPriority, onDue, onTime }: TodoItemProps) {
   const [burst, setBurst] = useState(0)
   const [draft, setDraft] = useState<string | null>(null)
   const highlighted = todo.priority === true && !todo.completed
@@ -84,7 +85,7 @@ export function TodoItem({ t, todo, today, onToggle, onRemove, onEdit, onPriorit
               stroke="#141413"
               strokeWidth="1.8"
               initial={false}
-              animate={{ fill: todo.completed ? PALETTE[todo.project ? projectHue(todo.project) : 'yellow'] : 'rgba(255,255,255,0)' }}
+              animate={{ fill: todo.completed ? (todo.project ? PALETTE[projectHue(todo.project)] : '#d3cebf') : 'rgba(255,255,255,0)' }}
             />
             {!todo.completed && (
               <path
@@ -131,11 +132,12 @@ export function TodoItem({ t, todo, today, onToggle, onRemove, onEdit, onPriorit
             />
           )}
           {(todo.due || todo.project) && (
-            <div className="mt-1 flex flex-wrap items-center gap-x-3 font-hand text-[17px] leading-none">
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 text-[13px] font-semibold leading-none">
               {todo.due && (
                 <span className={`inline-flex items-center gap-1 ${overdue ? 'text-danger' : todo.due === today ? 'text-ok' : todo.due === addDays(today, 1) ? 'text-sky-ink' : 'text-ink-2'}`}>
                   <CalendarIcon className="size-3.5" />
                   {formatDue(todo.due, today, t.locale, t)}
+                  {todo.time && `, ${formatTime(todo.time, t.locale)}`}
                 </span>
               )}
               {todo.project && (
@@ -154,12 +156,21 @@ export function TodoItem({ t, todo, today, onToggle, onRemove, onEdit, onPriorit
               aria-pressed={todo.priority === true}
               aria-label={t.flagTask(todo.text)}
               onClick={() => onPriority(todo.id)}
-              className={`${iconButton} max-sm:hidden ${todo.priority ? 'text-ink [@media(hover:hover)]:opacity-100' : ''}`}
+              className={`${iconButton} ${todo.priority ? 'text-ink [@media(hover:hover)]:opacity-100' : ''}`}
               {...hoverProps}
             >
               <StarIcon filled={todo.priority === true} />
             </motion.button>
-            <DateButton t={t} today={today} value={todo.due} label={t.setDue(todo.text)} onChange={(date) => onDue(todo.id, date)} className={iconButton}>
+            <DateButton
+              t={t}
+              today={today}
+              value={todo.due}
+              time={todo.time}
+              label={t.setDue(todo.text)}
+              onChange={(date) => onDue(todo.id, date)}
+              onTime={(time) => onTime(todo.id, time)}
+              className={iconButton}
+            >
               <CalendarIcon />
             </DateButton>
             <motion.button type="button" aria-label={t.editTask(todo.text)} onClick={() => setDraft(todo.text)} className={`${iconButton} max-sm:hidden`} {...hoverProps}>

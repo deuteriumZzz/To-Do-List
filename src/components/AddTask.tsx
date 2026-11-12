@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useState, type SubmitEvent } from 'react'
-import { addDays, formatDue, parseQuickAdd, type ISODate } from '../dates'
+import { addDays, formatDue, formatTime, parseQuickAdd, type ISODate, type Time } from '../dates'
 import type { Messages } from '../i18n'
 import { hoverProps, springs } from '../motion'
 import { PALETTE, projectHue, type Hue } from '../palette'
@@ -16,17 +16,18 @@ interface AddTaskProps {
   onClose: () => void
   /** Date used when the text does not name one (e.g. the day selected in the calendar). */
   defaultDue?: ISODate
-  onAdd: (text: string, defaults: { due?: ISODate }) => boolean
+  onAdd: (text: string, defaults: { due?: ISODate; time?: Time }) => boolean
 }
 
 const TAPES: Hue[] = ['yellow', 'pink', 'green', 'sky', 'orange', 'lilac']
 
-const tag = 'inline-flex items-center gap-1 rounded-full bg-ink/10 px-2.5 py-0.5 font-hand text-xl leading-none'
+const tag = 'inline-flex items-center gap-1 rounded-full bg-ink/10 px-2.5 py-1 text-[13px] font-semibold leading-none'
 
 /** A note page taped into the notebook: same paper, pen underline and handwriting as the rest. */
 function AddForm({ t, today, onClose, defaultDue, onAdd }: Omit<AddTaskProps, 'open' | 'onOpen'>) {
   const [text, setText] = useState('')
   const [picked, setPicked] = useState<ISODate | undefined>()
+  const [pickedTime, setPickedTime] = useState<Time | undefined>()
   const [example, setExample] = useState(0)
   const [tape] = useState(() => TAPES[Math.floor(Math.random() * TAPES.length)])
 
@@ -36,15 +37,17 @@ function AddForm({ t, today, onClose, defaultDue, onAdd }: Omit<AddTaskProps, 'o
   }, [])
 
   const parsed = parseQuickAdd(text, today)
-  const due = parsed.due ?? picked ?? defaultDue
+  const time = parsed.time ?? pickedTime
+  const due = parsed.due ?? picked ?? defaultDue ?? (time ? today : undefined)
   const canAdd = parsed.text !== ''
 
   function submit(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!canAdd) return
-    onAdd(text, due ? { due } : {})
+    onAdd(text, { ...(due ? { due } : {}), ...(time ? { time } : {}) })
     setText('')
     setPicked(undefined)
+    setPickedTime(undefined)
   }
 
   const tool = 'grid size-9 place-items-center rounded-full text-ink-2 transition-colors hover:bg-ink/10 hover:text-ink'
@@ -94,7 +97,7 @@ function AddForm({ t, today, onClose, defaultDue, onAdd }: Omit<AddTaskProps, 'o
 
       <div className="flex min-h-9 flex-wrap items-center gap-2 pt-2">
         {parsed.priority && (
-          <span className="marker px-2 font-hand text-xl leading-none" style={{ backgroundSize: '100% 100%' }}>
+          <span className="marker px-2 text-[13px] font-semibold leading-none" style={{ backgroundSize: '100% 100%' }}>
             {t.priority}
           </span>
         )}
@@ -105,6 +108,7 @@ function AddForm({ t, today, onClose, defaultDue, onAdd }: Omit<AddTaskProps, 'o
           >
             <CalendarIcon className="size-3.5" />
             {formatDue(due, today, t.locale, t)}
+            {time && `, ${formatTime(time, t.locale)}`}
           </span>
         )}
         {parsed.project && (
@@ -125,17 +129,26 @@ function AddForm({ t, today, onClose, defaultDue, onAdd }: Omit<AddTaskProps, 'o
         >
           <StarIcon filled={parsed.priority} />
         </motion.button>
-        <DateButton t={t} today={today} value={due} label={t.dueDate} onChange={(date) => setPicked(date ?? undefined)} className={tool}>
+        <DateButton
+          t={t}
+          today={today}
+          value={due}
+          time={time}
+          label={t.dueDate}
+          onChange={(date) => setPicked(date ?? undefined)}
+          onTime={(tm) => setPickedTime(tm ?? undefined)}
+          className={tool}
+        >
           <CalendarIcon />
         </DateButton>
         <span className="flex-1" />
-        <button type="button" onClick={onClose} className="rounded-full px-3 py-1 font-hand text-2xl leading-none text-ink-2 hover:text-ink">
+        <button type="button" onClick={onClose} className="rounded-full px-3 py-1.5 text-sm font-semibold text-ink-2 hover:text-ink">
           {t.cancel}
         </button>
         <button
           type="submit"
           disabled={!canAdd}
-          className="rounded-[14px_20px_16px_22px] bg-ink px-5 py-1.5 font-hand text-2xl leading-none text-paper shadow-[0_3px_0_rgb(0_0_0/0.35)] transition-[opacity,transform,box-shadow] hover:-translate-y-px active:translate-y-0.5 active:shadow-none disabled:opacity-35 disabled:hover:translate-y-0"
+          className="rounded-[14px_20px_16px_22px] bg-ink px-5 py-2 text-sm font-bold text-paper shadow-[0_3px_0_rgb(0_0_0/0.35)] transition-[opacity,transform,box-shadow] hover:-translate-y-px active:translate-y-0.5 active:shadow-none disabled:opacity-35 disabled:hover:translate-y-0"
         >
           {t.addTask}
         </button>
@@ -160,7 +173,7 @@ export function AddTask(props: AddTaskProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.06 } }}
-            className="flex w-full items-center gap-3 rounded-lg px-1 py-2.5 text-left font-hand text-2xl leading-none text-ink-2 hover:text-ink"
+            className="flex w-full items-center gap-3 rounded-lg px-1 py-2.5 text-left text-[15px] font-bold text-ink-2 hover:text-ink"
             whileHover="hover"
             whileTap="tap"
           >

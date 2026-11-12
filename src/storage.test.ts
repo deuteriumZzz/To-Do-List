@@ -29,9 +29,10 @@ describe('loadTodos', () => {
   })
 
   it('keeps optional fields when valid and drops tasks where they are malformed', () => {
-    const rich = { ...valid, id: 'r', priority: true, due: '2026-11-12', project: 'work', completedAt: 5 }
+    const rich = { ...valid, id: 'r', priority: true, due: '2026-11-12', project: 'work', time: '18:30', completedAt: 5 }
     const badDue = { ...valid, id: 'x', due: '12/11/2026' }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([rich, badDue]))
+    const badTime = { ...valid, id: 'y', time: '25:61' }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([rich, badDue, badTime]))
     expect(loadTodos().todos).toEqual([rich])
   })
 

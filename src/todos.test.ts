@@ -21,6 +21,12 @@ describe('createTodo', () => {
     expect(createTodo('Plan today', TODAY, { due: '2026-12-01' })?.due).toBe(TODAY)
   })
 
+  it('adds a time, and a time alone means today', () => {
+    expect(createTodo('Call at 18:30', TODAY)).toMatchObject({ text: 'Call', time: '18:30', due: TODAY })
+    expect(createTodo('Call tomorrow at 9:00', TODAY)).toMatchObject({ time: '09:00', due: '2026-11-13' })
+    expect(createTodo('Call', TODAY)?.time).toBeUndefined()
+  })
+
   it('generates unique ids', () => {
     expect(createTodo('a', TODAY)?.id).not.toBe(createTodo('a', TODAY)?.id)
   })
@@ -46,6 +52,14 @@ describe('todosReducer', () => {
     expect(dated[0].due).toBe('2026-11-20')
     expect(todosReducer(dated, { type: 'setDue', id: 'a', due: null })[0].due).toBeUndefined()
     expect(todosReducer(list, { type: 'edit', id: 'a', text: 'new' }).map((t) => t.text)).toEqual(['new', 'b'])
+  })
+
+  it('sets a time (defaulting the date to today) and clears it with the date', () => {
+    const list = [todo('a')]
+    const timed = todosReducer(list, { type: 'setTime', id: 'a', time: '08:15', today: TODAY })
+    expect(timed[0]).toMatchObject({ time: '08:15', due: TODAY })
+    expect(todosReducer(timed, { type: 'setTime', id: 'a', time: null, today: TODAY })[0].time).toBeUndefined()
+    expect(todosReducer(timed, { type: 'setDue', id: 'a', due: null })[0]).toMatchObject({ due: undefined, time: undefined })
   })
 
   it('removes the target and clears only completed tasks', () => {
@@ -74,6 +88,11 @@ describe('selectTodos', () => {
   it('Today includes overdue and sorts by date; Upcoming only future dates', () => {
     expect(ids(selectTodos(list, query('today')))).toEqual(['late', 'now'])
     expect(ids(selectTodos(list, query('upcoming')))).toEqual(['soon'])
+  })
+
+  it('sorts Today by time, timed tasks before untimed ones', () => {
+    const day = [todo('late', { due: TODAY, time: '18:00' }), todo('none', { due: TODAY }), todo('early', { due: TODAY, time: '08:00' })]
+    expect(ids(selectTodos(day, query('today')))).toEqual(['early', 'late', 'none'])
   })
 
   it('floats active priority tasks to the top', () => {

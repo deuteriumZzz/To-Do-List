@@ -11,15 +11,15 @@ A to-do list that feels like pen and paper. Built with React and TypeScript; eve
 - Undo after completing, deleting or clearing tasks (no "are you sure?" dialogs)
 
 **Planning**
-- Due dates (date picker or typed in the title) with overdue highlighting
+- Due dates and times of day (picker, or typed in the title) with overdue highlighting; tasks of a day are sorted by time
 - Views: All, Today (includes overdue), Upcoming (grouped by day), Active, Completed
 - Month calendar drawn as a spiral-notebook page: tasks are written right on their days (priority in highlighter), arrow keys to move between days, hover a day for a quick + to add a task to it, click a day to circle it and see its tasks
-- A notebook-style date picker with quick chips (Today, Tomorrow, Next week, No date) instead of the browser default
+- A notebook-style date and time picker with quick chips (Today, Tomorrow, Next week; 9:00 to 21:00) and hour/minute steppers instead of the browser default
 - Projects, created simply by writing `#name` in a task; every project gets its own highlighter colour, used on its tag, checkbox, sidebar entry and calendar notes
 - Priority tasks are highlighted with a marker and listed first
 - Search
 
-**Quick add**, understood anywhere in the text: `!` at the start flags a task as priority, `#family` sets the project, `today` / `tomorrow` (`сегодня` / `завтра`) or `2026-12-24` sets the date. Example: `!Call mum tomorrow #family`. The recognised parts show up as chips under the input.
+**Quick add**, understood anywhere in the text: `!` at the start flags a task as priority, `#family` sets the project, `today` / `tomorrow` (`сегодня` / `завтра`) or `2026-12-24` sets the date, `18:30`, `6:30pm` or `в 18:30` sets the time. Example: `!Call mum tomorrow at 18:30 #family`. The recognised parts show up as chips under the input.
 
 **Report**: tasks completed today and over the last 7 days, day streak, completion rate, overdue and due-today counts, and a 7-day bar chart (with a screen-reader table).
 
@@ -67,15 +67,15 @@ Then open the URL printed in the terminal (usually http://localhost:5173).
 ## How data is stored
 
 Tasks are kept in `localStorage` under the key `todo-list:v1` as a JSON array of
-`{ id, text, completed, priority?, due?, project?, completedAt?, createdAt }` objects
-(`due` is a local `YYYY-MM-DD` date). All storage access lives in [`src/storage.ts`](src/storage.ts).
+`{ id, text, completed, priority?, due?, time?, project?, completedAt?, createdAt }` objects
+(`due` is a local `YYYY-MM-DD` date, `time` a 24-hour `HH:MM`). All storage access lives in [`src/storage.ts`](src/storage.ts).
 
 - Saved data is read and validated before the first render, so it is never overwritten by an empty list.
 - Corrupted JSON, non-array data and malformed items are ignored instead of crashing the app.
 - If the browser blocks storage, the app keeps working for the current session and shows a notice that tasks will not be saved.
 - The chosen language is stored separately under `todo-list:lang` (`"en"` or `"ru"`).
 
-There is no sync between devices or browsers, no reminders and no sharing: the app is client-only by design.
+There is no sync between devices or browsers, no reminders or notifications and no sharing: the app is client-only by design.
 
 ## Project structure
 

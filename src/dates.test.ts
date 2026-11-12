@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { addDays, formatDue, isISODate, monthGrid, parseQuickAdd, toISO } from './dates'
+import { addDays, formatDue, formatTime, isISODate, isTime, monthGrid, parseQuickAdd, toISO } from './dates'
 
 const TODAY = '2026-11-12'
 
@@ -59,5 +59,28 @@ describe('parseQuickAdd', () => {
 
   it('leaves an empty title when only tokens are given', () => {
     expect(parseQuickAdd('!tomorrow #x', TODAY).text).toBe('')
+  })
+})
+
+describe('time', () => {
+  it('validates and formats times', () => {
+    expect(isTime('18:30')).toBe(true)
+    expect(isTime('24:00')).toBe(false)
+    expect(isTime('9:30')).toBe(false)
+    expect(formatTime('18:30', 'en-US')).toMatch(/6:30\sPM/)
+    expect(formatTime('18:30', 'ru-RU')).toBe('18:30')
+  })
+
+  it('reads times typed as 24-hour or am/pm, with or without a preposition', () => {
+    expect(parseQuickAdd('Call mum tomorrow at 18:30', TODAY)).toMatchObject({ text: 'Call mum', due: '2026-11-13', time: '18:30' })
+    expect(parseQuickAdd('Позвонить маме в 9:05', TODAY)).toMatchObject({ text: 'Позвонить маме', time: '09:05' })
+    expect(parseQuickAdd('Gym 6pm', TODAY)).toMatchObject({ text: 'Gym', time: '18:00' })
+    expect(parseQuickAdd('Gym 6:30pm', TODAY)).toMatchObject({ text: 'Gym', time: '18:30' })
+    expect(parseQuickAdd('Lunch at 12 am', TODAY)).toMatchObject({ time: '00:00' })
+  })
+
+  it('ignores impossible times', () => {
+    expect(parseQuickAdd('Room 25:99', TODAY)).toMatchObject({ text: 'Room 25:99', time: undefined })
+    expect(parseQuickAdd('Meet 13pm', TODAY).time).toBeUndefined()
   })
 })

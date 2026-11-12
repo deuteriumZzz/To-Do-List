@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { toISO, type ISODate } from './dates'
+import { toISO, type ISODate, type Time } from './dates'
 import { loadTodos, saveTodos } from './storage'
 import { createTodo, todosReducer, type Action, type Todo } from './todos'
 
@@ -34,7 +34,7 @@ export function useTodos() {
     storageOk,
     undoState,
     /** Returns false when no title is left after parsing (nothing was added). */
-    add(text: string, defaults: { due?: ISODate } = {}) {
+    add(text: string, defaults: { due?: ISODate; time?: Time } = {}) {
       const todo = createTodo(text, toISO(new Date()), defaults)
       if (todo) apply({ type: 'add', todo })
       return todo !== null
@@ -51,6 +51,7 @@ export function useTodos() {
     },
     togglePriority: (id: string) => apply({ type: 'togglePriority', id }),
     setDue: (id: string, due: ISODate | null) => apply({ type: 'setDue', id, due }),
+    setTime: (id: string, time: Time | null) => apply({ type: 'setTime', id, time, today: toISO(new Date()) }),
     remove: (id: string) => apply({ type: 'remove', id }, { kind: 'removed', count: 1 }),
     clearCompleted() {
       const count = todos.filter((t) => t.completed).length

@@ -1,6 +1,6 @@
 import { motion } from 'motion/react'
 import { useRef, useState, type KeyboardEvent } from 'react'
-import { addDays, fromISO, monthGrid, weekdayNames, type ISODate } from '../dates'
+import { addDays, formatTime, fromISO, monthGrid, weekdayNames, type ISODate, type Time } from '../dates'
 import type { Messages } from '../i18n'
 import { hoverProps, springs } from '../motion'
 import { PALETTE, projectHue } from '../palette'
@@ -14,7 +14,7 @@ interface CalendarViewProps extends ItemHandlers {
   t: Messages
   todos: Todo[]
   today: ISODate
-  onAdd: (text: string, defaults: { due?: ISODate }) => boolean
+  onAdd: (text: string, defaults: { due?: ISODate; time?: Time }) => boolean
 }
 
 const MAX_CHIPS = 3
@@ -38,6 +38,7 @@ function PenRing() {
 }
 
 const rank = (t: Todo) => (t.completed ? 2 : t.priority ? 0 : 1)
+const byTimeThenRank = (a: Todo, b: Todo) => (a.time ?? '99:99').localeCompare(b.time ?? '99:99') || rank(a) - rank(b)
 
 const TONES = {
   active: 'bg-ink/[0.1] max-sm:bg-ink/70',
@@ -47,7 +48,7 @@ const TONES = {
 const toneOf = (todo: Todo) => (todo.completed ? TONES.done : todo.priority ? TONES.priority : TONES.active)
 
 /** A task written on its day: a colour-coded note, a thin bar on narrow screens. */
-function Chip({ todo }: { todo: Todo }) {
+function Chip({ todo, locale }: { todo: Todo; locale: string }) {
   return (
     <motion.span
       initial={{ opacity: 0, scale: 0.85 }}
@@ -56,7 +57,10 @@ function Chip({ todo }: { todo: Todo }) {
       style={!todo.completed && !todo.priority && todo.project ? { backgroundColor: PALETTE[projectHue(todo.project)] } : undefined}
       className={`block origin-left rounded-md px-1.5 py-0.5 text-xs font-semibold leading-4 max-sm:h-1.5 max-sm:rounded-full max-sm:p-0 ${toneOf(todo)}`}
     >
-      <span className="line-clamp-2 break-words max-sm:hidden">{todo.text}</span>
+      <span className="line-clamp-2 break-words max-sm:hidden">
+        {todo.time && <b className="mr-1 font-bold tabular-nums">{formatTime(todo.time, locale)}</b>}
+        {todo.text}
+      </span>
     </motion.span>
   )
 }
@@ -75,7 +79,7 @@ export function CalendarView({ t, todos, today, onAdd, ...handlers }: CalendarVi
 
   const byDay = new Map<ISODate, Todo[]>()
   for (const todo of todos) if (todo.due) byDay.set(todo.due, [...(byDay.get(todo.due) ?? []), todo])
-  const dayTodos = byDay.get(selected) ?? []
+  const dayTodos = (byDay.get(selected) ?? []).toSorted(byTimeThenRank)
 
   function select(iso: ISODate, focus = false) {
     setSelected(iso)
@@ -147,7 +151,7 @@ export function CalendarView({ t, todos, today, onAdd, ...handlers }: CalendarVi
         <div ref={grid} key={`${cursor.year}-${cursor.month}`} onKeyDown={onKeyDown} className="grid grid-cols-7 gap-1.5 sm:gap-2">
           {cells.map((iso, i) => {
             const inMonth = Number(iso.slice(5, 7)) - 1 === cursor.month
-            const items = (byDay.get(iso) ?? []).toSorted((a, b) => rank(a) - rank(b))
+            const items = (byDay.get(iso) ?? []).toSorted(byTimeThenRank)
             const isSelected = iso === selected
             const label = shortDay(iso)
             const weekend = [0, 6].includes(fromISO(iso).getDay())
@@ -156,7 +160,7 @@ export function CalendarView({ t, todos, today, onAdd, ...handlers }: CalendarVi
                 key={iso}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: inMonth ? 1 : 0.45, y: 0 }}
-                transition={{ ...springs.snappy, delay: i * 0.008 }}
+                transition={{ ...springs.snappy, delay: i * 0.004 }}
                 className={`group relative flex min-h-[5.25rem] flex-col gap-1 rounded-2xl p-1.5 pb-4 shadow-[0_1px_0_var(--color-line)] transition-colors hover:bg-paper sm:min-h-28 sm:p-2 ${
                   weekend ? 'bg-[#8fd3ff]/15' : 'bg-paper/85'
                 }`}
@@ -177,15 +181,13 @@ export function CalendarView({ t, todos, today, onAdd, ...handlers }: CalendarVi
                       aria-hidden="true"
                       className="absolute -inset-x-1.5 -inset-y-0.5 -rotate-3 rounded-[45%]"
                       style={{ filter: 'url(#rough-edge)', backgroundColor: PALETTE.green }}
-                      animate={{ scale: [1, 1.1, 1] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
                     />
                   )}
                   <span className="relative font-hand text-2xl font-bold leading-none tabular-nums">{Number(iso.slice(8))}</span>
                 </span>
                 <span className="pointer-events-none flex flex-col gap-1">
                   {items.slice(0, MAX_CHIPS).map((todo) => (
-                    <Chip key={todo.id} todo={todo} />
+                    <Chip key={todo.id} todo={todo} locale={t.locale} />
                   ))}
                   {items.length > MAX_CHIPS && (
                     <span className="font-hand text-lg leading-none text-ink-2">{t.calendar.more(items.length - MAX_CHIPS)}</span>
