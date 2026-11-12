@@ -33,8 +33,15 @@ export function Sidebar({ t, lang, onLang, view, project, counts, projects, chee
   const patch = (selected: boolean, hue: Hue) => (
     <span
       aria-hidden="true"
-      className="pointer-events-none absolute -inset-x-1 inset-y-0 transition-[background-size] duration-500 ease-out motion-reduce:transition-none"
-      style={{ ...paintedBlock(PALETTE[hue]), backgroundSize: selected ? '100% 100%' : '0% 100%', backgroundPosition: 'left center' }}
+      className="pointer-events-none absolute -inset-x-1 inset-y-0 transition-[background-size] motion-reduce:transition-none"
+      style={{
+        ...paintedBlock(PALETTE[hue]),
+        backgroundSize: selected ? '100% 100%' : '0% 100%',
+        backgroundPosition: 'left center',
+        // painted on slowly and evenly so the stroke is visible; wiped off quickly
+        transitionDuration: selected ? '0.6s' : '0.25s',
+        transitionTimingFunction: selected ? 'cubic-bezier(0.45, 0, 0.3, 1)' : 'ease-in',
+      }}
     />
   )
   const count = (n: number) => (
