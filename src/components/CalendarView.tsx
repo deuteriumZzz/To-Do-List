@@ -15,6 +15,7 @@ interface CalendarViewProps extends ItemHandlers {
   todos: Todo[]
   today: ISODate
   onAdd: (text: string, defaults: { due?: ISODate; time?: Time }) => boolean
+  lastAdded?: string | null
 }
 
 const MAX_CHIPS = 3
@@ -65,7 +66,7 @@ function Chip({ todo, locale }: { todo: Todo; locale: string }) {
   )
 }
 
-export function CalendarView({ t, todos, today, onAdd, ...handlers }: CalendarViewProps) {
+export function CalendarView({ t, todos, today, onAdd, lastAdded = null, ...handlers }: CalendarViewProps) {
   const [cursor, setCursor] = useState(() => ({ year: Number(today.slice(0, 4)), month: Number(today.slice(5, 7)) - 1 }))
   const [selected, setSelected] = useState<ISODate>(today)
   const [adding, setAdding] = useState(false)
@@ -224,7 +225,7 @@ export function CalendarView({ t, todos, today, onAdd, ...handlers }: CalendarVi
           <span className="pb-0.5 text-sm font-semibold text-ink-2">{t.tasksCount(dayTodos.length)}</span>
         </div>
         {dayTodos.length > 0 ? (
-          <TaskList t={t} todos={dayTodos} view="all" today={today} {...handlers} />
+          <TaskList t={t} todos={dayTodos} view="all" today={today} lastAdded={lastAdded} {...handlers} />
         ) : (
           <p className="py-5 font-hand text-2xl text-ink-2">{t.calendar.free}</p>
         )}

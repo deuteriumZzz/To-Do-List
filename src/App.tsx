@@ -21,7 +21,7 @@ const TONES = { all: 'idle', today: 'idle', upcoming: 'idle', active: 'celebrate
 const isListView = (v: View): v is ListView => (LIST_VIEWS as View[]).includes(v)
 
 export default function App() {
-  const { todos, storageOk, undoState, add, edit, toggle, togglePriority, setDue, setTime, remove, clearCompleted, undo, dismissUndo } = useTodos()
+  const { todos, storageOk, undoState, lastAdded, add, edit, toggle, togglePriority, setDue, setTime, remove, clearCompleted, undo, dismissUndo } = useTodos()
   const [view, setView] = useState<View>('all')
   const [project, setProject] = useState<string | null>(null)
   const [search, setSearch] = useState('')
@@ -158,13 +158,13 @@ export default function App() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, ease }}
               >
-                {view === 'calendar' && <CalendarView t={t} todos={todos} today={today} onAdd={add} {...handlers} />}
+                {view === 'calendar' && <CalendarView t={t} todos={todos} today={today} onAdd={add} lastAdded={lastAdded} {...handlers} />}
                 {view === 'report' && <ReportView t={t} report={buildReport(todos, today)} today={today} />}
                 {isList && (
                   <>
                     {visible.length > 0 ? (
                       <>
-                        <TaskList t={t} todos={visible} view={view} today={today} peek={peek} {...handlers} />
+                        <TaskList t={t} todos={visible} view={view} today={today} peek={peek} lastAdded={lastAdded} {...handlers} />
                         <p className="mt-3 text-center font-hand text-xl leading-tight text-ink-2 [@media(hover:hover)]:hidden">{t.swipe.hint}</p>
                       </>
                     ) : (

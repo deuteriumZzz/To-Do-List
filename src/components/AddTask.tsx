@@ -6,7 +6,7 @@ import { hoverProps, springs } from '../motion'
 import { PALETTE, paintedBlock, projectHue, type Hue } from '../palette'
 import { MAX_LENGTH } from '../todos'
 import { DateButton } from './DatePicker'
-import { CalendarIcon, PlusIcon, StarIcon } from './icons'
+import { CalendarIcon, CloseIcon, PlusIcon, StarIcon } from './icons'
 
 interface AddTaskProps {
   t: Messages
@@ -69,6 +69,19 @@ function AddForm({ t, today, onClose, defaultDue, onAdd }: Omit<AddTaskProps, 'o
         className="absolute -top-3 left-8 h-6 w-24 -rotate-3 opacity-90 shadow-sm [clip-path:polygon(0_0,100%_0,98%_25%,100%_50%,98%_75%,100%_100%,0_100%,2%_75%,0_50%,2%_25%)]"
       />
 
+      {/* close: a red marker dot with a cross, stuck to the corner of the note */}
+      <motion.button
+        type="button"
+        aria-label={t.cancel}
+        title={`${t.cancel} (Esc)`}
+        onClick={onClose}
+        style={paintedBlock('#ff7d6e')}
+        className="absolute -right-3 -top-3 z-10 grid size-10 place-items-center rounded-full text-ink shadow-[0_6px_12px_-6px_rgb(0_0_0/0.5)]"
+        {...hoverProps}
+      >
+        <CloseIcon className="size-4" />
+      </motion.button>
+
       <input
         autoFocus
         value={text}
@@ -80,7 +93,7 @@ function AddForm({ t, today, onClose, defaultDue, onAdd }: Omit<AddTaskProps, 'o
         onKeyDown={(e) => {
           if (e.key === 'Escape') onClose()
         }}
-        className="w-full bg-transparent py-1 text-xl font-semibold placeholder:font-hand placeholder:text-3xl placeholder:font-normal placeholder:text-ink-2/60 focus:outline-none"
+        className="w-full bg-transparent py-0.5 pr-8 font-hand text-3xl font-bold leading-tight placeholder:font-normal placeholder:text-ink-2/60 focus:outline-none"
       />
       <svg aria-hidden="true" viewBox="0 0 100 6" preserveAspectRatio="none" className="h-2 w-full overflow-visible">
         <motion.path
@@ -142,9 +155,6 @@ function AddForm({ t, today, onClose, defaultDue, onAdd }: Omit<AddTaskProps, 'o
           <CalendarIcon />
         </DateButton>
         <span className="flex-1" />
-        <button type="button" onClick={onClose} className="rounded-full px-3 py-1.5 text-sm font-semibold text-ink-2 hover:text-ink">
-          {t.cancel}
-        </button>
         <button
           type="submit"
           disabled={!canAdd}

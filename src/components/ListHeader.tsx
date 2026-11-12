@@ -88,7 +88,7 @@ export function ListHeader({ t, view, project, dateLabel, isList, done, total, s
     <header className="mb-6">
       <p className="font-hand text-2xl leading-none text-ink-2">{dateLabel}</p>
       <div className="mt-1 flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
-        <h1 className="break-words font-hand text-5xl font-bold leading-[0.9] sm:text-7xl">{project !== null ? `#${project}` : t.views[view]}</h1>
+        <h1 className="py-1 pl-0.5 pr-5 font-hand text-5xl font-bold leading-none sm:text-7xl">{project !== null ? `#${project}` : t.views[view]}</h1>
         {isList && <SearchField t={t} value={search} onChange={onSearch} />}
       </div>
 

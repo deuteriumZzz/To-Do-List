@@ -18,6 +18,8 @@ export function useTodos() {
   const [todos, setTodos] = useState(initial.todos)
   const [storageOk, setStorageOk] = useState(initial.available)
   const [undoState, setUndoState] = useState<UndoState | null>(null)
+  /** Id of the task added last, so its title can be "written" with a pen. */
+  const [lastAdded, setLastAdded] = useState<string | null>(null)
 
   function commit(next: Todo[]) {
     setTodos(next)
@@ -33,10 +35,14 @@ export function useTodos() {
     todos,
     storageOk,
     undoState,
+    lastAdded,
     /** Returns false when no title is left after parsing (nothing was added). */
     add(text: string, defaults: { due?: ISODate; time?: Time } = {}) {
       const todo = createTodo(text, toISO(new Date()), defaults)
-      if (todo) apply({ type: 'add', todo })
+      if (todo) {
+        setLastAdded(todo.id)
+        apply({ type: 'add', todo })
+      }
       return todo !== null
     },
     /** Returns false when the new text is blank (the task is left unchanged). */

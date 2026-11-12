@@ -26,6 +26,8 @@ interface TodoItemProps extends ItemHandlers {
   today: ISODate
   /** Briefly swipe the row left and right to show the gesture (first run, touch screens). */
   peek?: boolean
+  /** The task was just added: write its title out with a pen. */
+  writing?: boolean
 }
 
 const iconButton =
@@ -34,7 +36,7 @@ const iconButton =
 /** Distance after which letting go completes or deletes the task. */
 const SWIPE_DISTANCE = 96
 
-export function TodoItem({ t, todo, today, peek = false, onToggle, onRemove, onEdit, onPriority, onDue, onTime }: TodoItemProps) {
+export function TodoItem({ t, todo, today, peek = false, writing = false, onToggle, onRemove, onEdit, onPriority, onDue, onTime }: TodoItemProps) {
   const [burst, setBurst] = useState(0)
   const [draft, setDraft] = useState<string | null>(null)
   const highlighted = todo.priority === true && !todo.completed
@@ -163,7 +165,7 @@ export function TodoItem({ t, todo, today, peek = false, onToggle, onRemove, onE
 
         <div className="min-w-0 flex-1">
           {draft === null ? (
-            <PenText text={todo.text} seed={todo.id} struck={todo.completed} highlighted={highlighted} onClick={() => setDraft(todo.text)} />
+            <PenText text={todo.text} seed={todo.id} struck={todo.completed} highlighted={highlighted} writing={writing} onClick={() => setDraft(todo.text)} />
           ) : (
             <input
               autoFocus
@@ -176,7 +178,7 @@ export function TodoItem({ t, todo, today, peek = false, onToggle, onRemove, onE
                 if (e.key === 'Enter') finishEdit(true)
                 if (e.key === 'Escape') finishEdit(false)
               }}
-              className="w-full border-b-2 border-ink bg-transparent py-0.5 text-base focus:outline-none"
+              className="w-full border-b-2 border-ink bg-transparent py-0.5 font-hand text-[26px] font-bold leading-[1.1] focus:outline-none"
             />
           )}
           {(todo.due || todo.project) && (

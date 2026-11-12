@@ -42,9 +42,11 @@ interface TaskListProps extends ItemHandlers {
   today: ISODate
   /** Show the one-time swipe demonstration on the first task. */
   peek?: boolean
+  /** The task that was just added, written out with a pen. */
+  lastAdded?: string | null
 }
 
-export function TaskList({ t, todos, view, today, peek = false, ...handlers }: TaskListProps) {
+export function TaskList({ t, todos, view, today, peek = false, lastAdded = null, ...handlers }: TaskListProps) {
   return (
     <div aria-label={t.taskList}>
       {group(t, todos, view, today).map((g, gi) => (
@@ -58,7 +60,7 @@ export function TaskList({ t, todos, view, today, peek = false, ...handlers }: T
           <ul>
             <AnimatePresence mode="popLayout" initial={false}>
               {g.items.map((todo, i) => (
-                <TodoItem key={todo.id} t={t} todo={todo} today={today} peek={peek && gi === 0 && i === 0} {...handlers} />
+                <TodoItem key={todo.id} t={t} todo={todo} today={today} peek={peek && gi === 0 && i === 0} writing={todo.id === lastAdded} {...handlers} />
               ))}
             </AnimatePresence>
           </ul>
