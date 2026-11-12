@@ -88,7 +88,7 @@ interface DatePickerProps {
 
 /** A number you nudge up and down with two small keys, wrapping around. */
 function Stepper({ label, value, size, step, t, onChange }: { label: string; value: number; size: number; step: number; t: Messages; onChange: (v: number) => void }) {
-  const key = 'grid size-8 place-items-center rounded-full text-lg font-bold leading-none hover:bg-ink/10'
+  const key = 'grid size-8 place-items-center rounded-full font-hand text-3xl font-bold leading-none hover:bg-ink/10'
   return (
     <div role="group" aria-label={label} className="flex items-center gap-0.5">
       <button type="button" aria-label={t.time.dec(label)} onClick={() => onChange((value - step + size) % size)} className={key}>

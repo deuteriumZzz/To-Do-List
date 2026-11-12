@@ -43,7 +43,7 @@ export function Sidebar({ t, lang, onLang, view, project, counts, projects, chee
       <div className="flex items-center justify-between gap-3 px-4 pt-4 md:px-0 md:pt-0">
         <div className="flex items-center gap-2.5">
           <Tick className="h-9 w-9" cheer={cheer} />
-          <span className="text-2xl font-extrabold tracking-tight">{t.title}</span>
+          <span className="font-hand text-4xl font-bold leading-none">{t.title}</span>
         </div>
         <div className="md:hidden">
           <LangSwitch value={lang} label={t.language} onChange={onLang} />
@@ -101,7 +101,7 @@ export function Sidebar({ t, lang, onLang, view, project, counts, projects, chee
                 aria-hidden="true"
                 variants={{ rest: { rotate: 0, scale: 1 }, hover: { rotate: [0, -14, 10, 0], scale: 1.2, transition: { duration: 0.45 } } }}
                 style={painted(projectHue(p.name))}
-                className="relative w-5 text-center text-lg text-ink"
+                className="relative w-5 text-center font-hand text-2xl font-bold leading-none text-ink"
               >
                 #
               </motion.span>

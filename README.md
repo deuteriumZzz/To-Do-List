@@ -38,7 +38,7 @@ A to-do list that feels like pen and paper. Built with React and TypeScript; eve
 - [Vite](https://vite.dev)
 - [Tailwind CSS](https://tailwindcss.com) v4
 - [Motion](https://motion.dev) for animations
-- Self-hosted fonts via Fontsource: Onest (text) and Caveat (handwriting), both with Cyrillic
+- Self-hosted fonts via Fontsource, three roles, all with Cyrillic: Caveat (handwritten headings and notes), Lora (book serif for task text), Geologica (interface labels)
 - [Vitest](https://vitest.dev) + React Testing Library
 - [Oxlint](https://oxc.rs/docs/guide/usage/linter) for linting
 

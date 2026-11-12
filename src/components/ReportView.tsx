@@ -29,7 +29,7 @@ export function ReportView({ t, report, today }: ReportViewProps) {
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {tiles.map((tile) => (
           <div key={tile.label} className="rounded-2xl border border-line p-4">
-            <dd className="text-4xl font-extrabold leading-none tabular-nums">
+            <dd className="font-hand text-6xl font-bold leading-none tabular-nums">
               <span className="marker -mx-1 px-1 leading-[1.2]" style={painted(tile.hue)}>
                 {tile.value}
               </span>
@@ -49,7 +49,7 @@ export function ReportView({ t, report, today }: ReportViewProps) {
       </div>
 
       <figure>
-        <figcaption className="mb-4 text-lg font-extrabold tracking-tight">{t.report.chartTitle}</figcaption>
+        <figcaption className="mb-4 font-hand text-4xl font-bold leading-none">{t.report.chartTitle}</figcaption>
         <div className="flex">
           {report.days.map((d) => {
             const hint = t.report.chartHint(d.count, dayLabel(d.date))

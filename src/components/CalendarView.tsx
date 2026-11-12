@@ -57,8 +57,8 @@ function Chip({ todo, locale }: { todo: Todo; locale: string }) {
       style={!todo.completed && !todo.priority && todo.project ? { backgroundColor: PALETTE[projectHue(todo.project)] } : undefined}
       className={`block origin-left rounded-md px-1.5 py-0.5 text-xs font-semibold leading-4 max-sm:h-1.5 max-sm:rounded-full max-sm:p-0 ${toneOf(todo)}`}
     >
-      <span className="line-clamp-2 break-words max-sm:hidden">
-        {todo.time && <b className="mr-1 font-bold tabular-nums">{formatTime(todo.time, locale)}</b>}
+      <span className="line-clamp-3 hyphens-auto max-sm:hidden">
+        {todo.time && <b className="block font-bold tabular-nums opacity-70">{formatTime(todo.time, locale)}</b>}
         {todo.text}
       </span>
     </motion.span>

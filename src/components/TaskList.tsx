@@ -48,7 +48,7 @@ export function TaskList({ t, todos, view, today, ...handlers }: TaskListProps) 
       {group(t, todos, view, today).map((g) => (
         <section key={g.key}>
           {g.label && (
-            <h2 className={`mb-0.5 mt-5 flex items-baseline gap-2 border-b border-line pb-1.5 text-sm font-bold ${g.danger ? 'text-danger' : ''}`}>
+            <h2 className={`mb-0.5 mt-5 flex items-baseline gap-2 border-b border-line pb-1.5 font-hand text-2xl font-bold leading-none ${g.danger ? 'text-danger' : ''}`}>
               {g.label}
               {g.sub && <span className="font-hand text-lg font-bold text-ink-2">{g.sub}</span>}
             </h2>

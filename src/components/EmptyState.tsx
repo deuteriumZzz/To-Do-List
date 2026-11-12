@@ -20,7 +20,7 @@ export function EmptyState({ tone, title, hint }: EmptyStateProps) {
         />
         <Tick className="relative h-24 w-24" mood={tone === 'sleepy' ? 'sleepy' : 'idle'} celebrate={tone === 'celebrate'} />
       </div>
-      <p className="mt-6 text-xl font-extrabold tracking-tight">{title}</p>
+      <p className="mt-6 font-hand text-4xl font-bold leading-none">{title}</p>
       <p className="mt-1 max-w-xs font-hand text-2xl leading-tight text-ink-2">{hint}</p>
     </div>
   )

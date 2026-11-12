@@ -1,11 +1,13 @@
-@import '@fontsource-variable/onest/wght.css';
+@import '@fontsource-variable/geologica/wght.css';
+@import '@fontsource-variable/lora/wght.css';
 @import '@fontsource/caveat/latin-700.css';
 @import '@fontsource/caveat/cyrillic-700.css';
 @import 'tailwindcss';
 
 /* Pen and paper: a cream page on a black frame, ink-black type, a yellow highlighter. */
 @theme {
-  --font-sans: 'Onest Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Geologica Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Lora Variable', Georgia, serif;
   --font-hand: 'Caveat', 'Segoe Script', cursive;
 
   --color-frame: #0e0e0d;

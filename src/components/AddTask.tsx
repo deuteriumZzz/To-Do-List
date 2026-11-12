@@ -80,7 +80,7 @@ function AddForm({ t, today, onClose, defaultDue, onAdd }: Omit<AddTaskProps, 'o
         onKeyDown={(e) => {
           if (e.key === 'Escape') onClose()
         }}
-        className="w-full bg-transparent py-1 text-xl font-semibold placeholder:font-hand placeholder:text-3xl placeholder:font-normal placeholder:text-ink-2/60 focus:outline-none"
+        className="w-full bg-transparent py-1 font-serif text-xl font-semibold placeholder:font-hand placeholder:text-3xl placeholder:font-normal placeholder:text-ink-2/60 focus:outline-none"
       />
       <svg aria-hidden="true" viewBox="0 0 100 6" preserveAspectRatio="none" className="h-2 w-full overflow-visible">
         <motion.path
