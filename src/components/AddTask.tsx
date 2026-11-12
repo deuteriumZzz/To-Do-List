@@ -1,9 +1,11 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { useEffect, useRef, useState, type SubmitEvent } from 'react'
+import { useEffect, useState, type SubmitEvent } from 'react'
 import { formatDue, parseQuickAdd, type ISODate } from '../dates'
 import type { Messages } from '../i18n'
-import { springs } from '../motion'
+import { hoverProps, springs } from '../motion'
 import { MAX_LENGTH } from '../todos'
+import { DateButton } from './DatePicker'
+import { CalendarIcon, PlusIcon, StarIcon } from './icons'
 
 interface AddTaskProps {
   t: Messages
@@ -16,22 +18,10 @@ interface AddTaskProps {
   onAdd: (text: string, defaults: { due?: ISODate }) => boolean
 }
 
-const icon = {
-  viewBox: '0 0 20 20',
-  fill: 'none',
-  stroke: 'currentColor',
-  strokeWidth: 1.8,
-  strokeLinecap: 'round',
-  strokeLinejoin: 'round',
-  'aria-hidden': true,
-  className: 'size-[18px]',
-} as const
-
 function AddForm({ t, today, onClose, defaultDue, onAdd }: Omit<AddTaskProps, 'open' | 'onOpen'>) {
   const [text, setText] = useState('')
   const [picked, setPicked] = useState<ISODate | undefined>()
   const [example, setExample] = useState(0)
-  const dateInput = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const timer = setInterval(() => setExample((n) => n + 1), 3500)
@@ -49,6 +39,8 @@ function AddForm({ t, today, onClose, defaultDue, onAdd }: Omit<AddTaskProps, 'o
     setText('')
     setPicked(undefined)
   }
+
+  const tool = 'grid size-9 place-items-center rounded-lg hover:bg-ink/10'
 
   return (
     <motion.form
@@ -85,36 +77,19 @@ function AddForm({ t, today, onClose, defaultDue, onAdd }: Omit<AddTaskProps, 'o
       </div>
 
       <div className="flex items-center gap-1 border-t border-line pt-3">
-        <button
+        <motion.button
           type="button"
           aria-pressed={parsed.priority}
           aria-label={t.priority}
           onClick={() => setText(parsed.priority ? text.replace(/^\s*!/, '') : `!${text}`)}
-          className={`grid size-9 place-items-center rounded-lg hover:bg-ink/10 ${parsed.priority ? 'bg-marker' : ''}`}
+          className={`${tool} ${parsed.priority ? 'bg-marker' : ''}`}
+          {...hoverProps}
         >
-          <svg {...icon} fill={parsed.priority ? 'currentColor' : 'none'}>
-            <path d="M10 2.800l2.200 4.500 4.900.7-3.600 3.400.9 4.900L10 14l-4.400 2.300.9-4.900L2.900 8l4.900-.7L10 2.800z" />
-          </svg>
-        </button>
-        <button
-          type="button"
-          aria-label={t.dueDate}
-          onClick={() => dateInput.current?.showPicker?.()}
-          className="grid size-9 place-items-center rounded-lg hover:bg-ink/10"
-        >
-          <svg {...icon}>
-            <path d="M4 5h12v11H4zM4 8.500h12M7 3v3M13 3v3" />
-          </svg>
-        </button>
-        <input
-          ref={dateInput}
-          type="date"
-          tabIndex={-1}
-          aria-hidden="true"
-          value={picked ?? ''}
-          onChange={(e) => setPicked(e.target.value || undefined)}
-          className="pointer-events-none absolute size-0 opacity-0"
-        />
+          <StarIcon filled={parsed.priority} />
+        </motion.button>
+        <DateButton t={t} today={today} value={due} label={t.dueDate} onChange={(date) => setPicked(date ?? undefined)} className={tool}>
+          <CalendarIcon />
+        </DateButton>
         <span className="flex-1" />
         <button type="button" onClick={onClose} className="rounded-lg px-3 py-2 text-sm font-semibold text-ink-2 hover:bg-ink/10">
           {t.cancel}
@@ -122,7 +97,7 @@ function AddForm({ t, today, onClose, defaultDue, onAdd }: Omit<AddTaskProps, 'o
         <button
           type="submit"
           disabled={!canAdd}
-          className="rounded-lg bg-ink px-4 py-2 text-sm font-bold text-paper transition-opacity disabled:opacity-35"
+          className="rounded-lg bg-ink px-4 py-2 text-sm font-bold text-paper transition-[opacity,transform] active:scale-95 disabled:opacity-35"
         >
           {t.addTask}
         </button>
@@ -147,12 +122,12 @@ export function AddTask(props: AddTaskProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.06 } }}
-            className="group flex w-full items-center gap-3 rounded-lg px-1 py-3 text-left font-semibold text-ink-2 hover:text-ink"
+            className="flex w-full items-center gap-3 rounded-lg px-1 py-3 text-left font-semibold text-ink-2 hover:text-ink"
+            whileHover="hover"
+            whileTap="tap"
           >
-            <span className="grid size-6 place-items-center rounded-full bg-ink text-paper transition-transform group-hover:scale-110">
-              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true" className="size-3.5">
-                <path d="M10 4v12M4 10h12" />
-              </svg>
+            <span className="grid size-6 place-items-center rounded-full bg-ink text-paper">
+              <PlusIcon />
             </span>
             {t.addTask}
           </motion.button>

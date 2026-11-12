@@ -1,19 +1,10 @@
 import { motion } from 'motion/react'
 import type { Lang, Messages } from '../i18n'
-import { springs } from '../motion'
+import { hoverProps, springs } from '../motion'
 import { LIST_VIEWS, type ListView, type View } from '../todos'
+import { NavIcon, PlusIcon } from './icons'
 import { LangSwitch } from './LangSwitch'
 import { Tick } from './Tick'
-
-const ICONS: Record<View, string> = {
-  all: 'M4 13l2-8h12l2 8M4 13v6h16v-6M4 13h5l1 2h4l1-2h5',
-  today: 'M5 5h14v15H5zM5 10h14M9 3v4M15 3v4M12 13v3',
-  upcoming: 'M5 5h14v15H5zM5 10h14M9 3v4M15 3v4M9 15h6',
-  active: 'M12 4a8 8 0 100 16 8 8 0 000-16z',
-  completed: 'M12 4a8 8 0 100 16 8 8 0 000-16zM8.500 12.500l2.500 2.500 4.500-5',
-  calendar: 'M4 5h16v15H4zM4 10h16M10 10v10M16 10v10',
-  report: 'M5 20v-9M12 20V5M19 20v-6',
-}
 
 const NAV: View[] = [...LIST_VIEWS, 'calendar', 'report']
 const isListView = (v: View): v is ListView => (LIST_VIEWS as View[]).includes(v)
@@ -56,31 +47,35 @@ export function Sidebar({ t, lang, onLang, view, project, counts, projects, chee
         </div>
       </div>
 
-      <button
+      <motion.button
         type="button"
         onClick={onAdd}
         className="mt-5 hidden items-center gap-3 rounded-lg px-3 py-2 text-[15px] font-bold hover:bg-ink/10 md:flex"
+        {...hoverProps}
       >
         <span className="grid size-6 place-items-center rounded-full bg-ink text-paper">
-          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true" className="size-3.5">
-            <path d="M10 4v12M4 10h12" />
-          </svg>
+          <PlusIcon />
         </span>
         {t.addTask}
-      </button>
+      </motion.button>
 
       <nav aria-label={t.navLabel} className="flex gap-1 overflow-x-auto px-3 py-3 md:mt-1 md:flex-col md:overflow-visible md:px-0 md:py-0">
         {NAV.map((v) => {
           const selected = view === v && project === null
           return (
-            <button key={v} type="button" aria-current={selected ? 'page' : undefined} onClick={() => onView(v)} className={item(selected)}>
+            <motion.button
+              key={v}
+              type="button"
+              aria-current={selected ? 'page' : undefined}
+              onClick={() => onView(v)}
+              className={item(selected)}
+              {...hoverProps}
+            >
               {selected && pill}
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="relative size-5">
-                <path d={ICONS[v]} />
-              </svg>
+              <NavIcon view={v} />
               <span className="relative">{t.nav[v]}</span>
               {isListView(v) && count(counts[v])}
-            </button>
+            </motion.button>
           )
         })}
 
@@ -90,14 +85,25 @@ export function Sidebar({ t, lang, onLang, view, project, counts, projects, chee
         {projects.map((p) => {
           const selected = project === p.name
           return (
-            <button key={p.name} type="button" aria-current={selected ? 'page' : undefined} onClick={() => onProject(p.name)} className={item(selected)}>
+            <motion.button
+              key={p.name}
+              type="button"
+              aria-current={selected ? 'page' : undefined}
+              onClick={() => onProject(p.name)}
+              className={item(selected)}
+              {...hoverProps}
+            >
               {selected && pill}
-              <span aria-hidden="true" className="relative w-5 text-center text-lg text-ink-2">
+              <motion.span
+                aria-hidden="true"
+                variants={{ rest: { rotate: 0, scale: 1 }, hover: { rotate: [0, -14, 10, 0], scale: 1.2, transition: { duration: 0.45 } } }}
+                className="relative w-5 text-center text-lg text-ink-2"
+              >
                 #
-              </span>
+              </motion.span>
               <span className="relative">{p.name}</span>
               {count(p.count)}
-            </button>
+            </motion.button>
           )
         })}
       </nav>

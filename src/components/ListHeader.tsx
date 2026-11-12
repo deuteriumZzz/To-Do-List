@@ -1,16 +1,17 @@
 import { AnimatePresence, motion } from 'motion/react'
+import { useState } from 'react'
 import type { Messages } from '../i18n'
-import { springs } from '../motion'
+import { hoverProps, springs } from '../motion'
 import type { View } from '../todos'
+import { CloseIcon, SearchIcon } from './icons'
 
 interface ListHeaderProps {
   t: Messages
   view: View
   project: string | null
   dateLabel: string
-  /** List views get search, a task count and the progress bar. */
+  /** List views get search and the progress strip. */
   isList: boolean
-  visibleCount: number
   done: number
   total: number
   search: string
@@ -18,56 +19,107 @@ interface ListHeaderProps {
   onClearCompleted: () => void
 }
 
-export function ListHeader({
-  t,
-  view,
-  project,
-  dateLabel,
-  isList,
-  visibleCount,
-  done,
-  total,
-  search,
-  onSearch,
-  onClearCompleted,
-}: ListHeaderProps) {
+/** Search as a line in a notebook: handwritten text, a pen draws the underline on focus. */
+function SearchField({ t, value, onChange }: { t: Messages; value: string; onChange: (v: string) => void }) {
+  const [focused, setFocused] = useState(false)
+  return (
+    <motion.div
+      {...hoverProps}
+      className="relative flex w-full items-center gap-2 border-b-2 border-ink/20 pb-1 transition-[width] duration-300 sm:w-56 sm:focus-within:w-72"
+    >
+      <motion.span animate={focused ? { rotate: [0, -14, 10, 0] } : { rotate: 0 }} transition={{ duration: 0.5 }} className="text-ink-2">
+        <SearchIcon />
+      </motion.span>
+      <input
+        type="search"
+        value={value}
+        placeholder={t.search}
+        aria-label={t.search}
+        onChange={(e) => onChange(e.target.value)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') onChange('')
+        }}
+        className="min-w-0 flex-1 bg-transparent font-hand text-2xl leading-none placeholder:text-ink-2/70 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
+      />
+      <AnimatePresence>
+        {value && (
+          <motion.button
+            type="button"
+            aria-label={t.cancel}
+            onClick={() => onChange('')}
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.5 }}
+            transition={springs.pop}
+            whileHover="hover"
+            whileTap="tap"
+            className="grid size-6 place-items-center rounded-full text-ink-2 hover:bg-ink/10 hover:text-ink"
+          >
+            <CloseIcon className="size-3.5" />
+          </motion.button>
+        )}
+      </AnimatePresence>
+      <svg aria-hidden="true" viewBox="0 0 100 6" preserveAspectRatio="none" className="pointer-events-none absolute -bottom-1 left-0 h-2 w-full overflow-visible">
+        <motion.path
+          d="M0 3 Q10 0.5 22 3 T46 3 T70 3 T100 2.5"
+          fill="none"
+          stroke="#141413"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          vectorEffect="non-scaling-stroke"
+          initial={false}
+          animate={{ pathLength: focused ? 1 : 0, opacity: focused ? 1 : 0 }}
+          transition={{ duration: 0.35, ease: 'easeOut' }}
+        />
+      </svg>
+    </motion.div>
+  )
+}
+
+export function ListHeader({ t, view, project, dateLabel, isList, done, total, search, onSearch, onClearCompleted }: ListHeaderProps) {
   const ratio = total === 0 ? 0 : done / total
   const percent = Math.round(ratio * 100)
 
   return (
     <header className="mb-6">
       <p className="font-hand text-2xl leading-none text-ink-2">{dateLabel}</p>
-      <div className="mt-1 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
-        <h1 className="text-4xl font-extrabold leading-none tracking-tight sm:text-5xl">
-          {project !== null ? `#${project}` : t.views[view]}
-        </h1>
-        {isList && (
-          <div className="relative w-full sm:w-56">
-            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-2">
-              <circle cx="9" cy="9" r="5.500" />
-              <path d="M13.500 13.500L17 17" />
-            </svg>
-            <input
-              type="search"
-              value={search}
-              placeholder={t.search}
-              aria-label={t.search}
-              onChange={(e) => onSearch(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Escape') onSearch('')
-              }}
-              className="h-10 w-full rounded-full border border-ink/25 bg-transparent pl-9 pr-3 text-sm placeholder:text-ink-2 focus:border-ink focus:outline-none"
-            />
-          </div>
-        )}
+      <div className="mt-1 flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
+        <h1 className="text-4xl font-extrabold leading-none tracking-tight sm:text-5xl">{project !== null ? `#${project}` : t.views[view]}</h1>
+        {isList && <SearchField t={t} value={search} onChange={onSearch} />}
       </div>
 
       {isList && (
-        <div className="mt-4">
-          <div className="flex items-center justify-between gap-3 text-sm text-ink-2">
-            <span>
-              <span className="font-semibold text-ink">{t.tasksCount(visibleCount)}</span> · {t.progress(done, total)}
-            </span>
+        <div className="mt-6">
+          {/* rough edge filter: makes the highlighter bar look hand-drawn */}
+          <svg width="0" height="0" aria-hidden="true" className="absolute">
+            <filter id="rough-edge" x="-2%" y="-30%" width="104%" height="160%">
+              <feTurbulence type="fractalNoise" baseFrequency="0.03 0.14" numOctaves="2" seed="4" result="noise" />
+              <feDisplacementMap in="SourceGraphic" in2="noise" scale="3.4" />
+            </filter>
+          </svg>
+          <div className="flex items-center gap-4">
+            <div
+              role="progressbar"
+              aria-label={t.progress(done, total)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={percent}
+              style={{ filter: 'url(#rough-edge)' }}
+              className="relative h-4 flex-1 overflow-hidden rounded-full bg-ink/10"
+            >
+              <motion.div
+                initial={false}
+                animate={{ x: `${(ratio - 1) * 100}%` }}
+                transition={springs.gentle}
+                className="highlighter absolute inset-0 rounded-full"
+              />
+            </div>
+            <span className="min-w-[3.2ch] text-right font-hand text-4xl leading-none tabular-nums">{percent}%</span>
+          </div>
+          <div className="mt-2 flex items-center justify-between text-sm text-ink-2">
+            <span>{t.progress(done, total)}</span>
             <AnimatePresence>
               {done > 0 && (
                 <motion.button
@@ -82,21 +134,6 @@ export function ListHeader({
                 </motion.button>
               )}
             </AnimatePresence>
-          </div>
-          <div
-            role="progressbar"
-            aria-label={t.progress(done, total)}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={percent}
-            className="mt-2 h-2.5 overflow-hidden rounded-full bg-ink/10"
-          >
-            <motion.div
-              initial={false}
-              animate={{ scaleX: ratio }}
-              transition={springs.gentle}
-              className="h-full origin-left rounded-full bg-marker ring-1 ring-inset ring-ink/60"
-            />
           </div>
         </div>
       )}

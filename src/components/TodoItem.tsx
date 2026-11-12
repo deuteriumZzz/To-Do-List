@@ -1,10 +1,13 @@
 import { motion } from 'motion/react'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { formatDue, type ISODate } from '../dates'
 import type { Messages } from '../i18n'
-import { springs } from '../motion'
+import { hoverProps, springs } from '../motion'
 import { isOverdue, type Todo } from '../todos'
 import { Burst } from './Burst'
+import { DateButton } from './DatePicker'
+import { CalendarIcon, PencilIcon, StarIcon, TrashIcon } from './icons'
+import { PenText } from './PenText'
 
 export interface ItemHandlers {
   onToggle: (id: string) => void
@@ -23,21 +26,9 @@ interface TodoItemProps extends ItemHandlers {
 const iconButton =
   'grid size-8 shrink-0 place-items-center rounded-lg text-ink-2 transition-colors hover:bg-ink/10 hover:text-ink focus-visible:opacity-100 group-focus-within:opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100'
 
-const svg = {
-  viewBox: '0 0 20 20',
-  fill: 'none',
-  stroke: 'currentColor',
-  strokeWidth: 1.7,
-  strokeLinecap: 'round',
-  strokeLinejoin: 'round',
-  'aria-hidden': true,
-  className: 'size-[18px]',
-} as const
-
 export function TodoItem({ t, todo, today, onToggle, onRemove, onEdit, onPriority, onDue }: TodoItemProps) {
   const [burst, setBurst] = useState(0)
   const [draft, setDraft] = useState<string | null>(null)
-  const dateInput = useRef<HTMLInputElement>(null)
   const highlighted = todo.priority === true && !todo.completed
   const overdue = isOverdue(todo, today)
 
@@ -61,9 +52,9 @@ export function TodoItem({ t, todo, today, onToggle, onRemove, onEdit, onPriorit
         else if (info.offset.x > 96 || info.velocity.x > 600) onToggle(todo.id)
       }}
       transition={springs.snappy}
-      className="group border-b border-line"
+      className="group border-b border-line transition-colors hover:bg-ink/[0.03]"
     >
-      <div className="flex items-start gap-3 py-3">
+      <div className="flex items-start gap-3 px-1 py-3">
         <label className="group/check relative mt-px shrink-0 cursor-pointer">
           <input
             type="checkbox"
@@ -82,6 +73,7 @@ export function TodoItem({ t, todo, today, onToggle, onRemove, onEdit, onPriorit
           <motion.svg
             viewBox="0 0 24 24"
             aria-hidden="true"
+            whileHover={{ rotate: -8, scale: 1.08 }}
             whileTap={{ scale: 0.85 }}
             transition={springs.pop}
             className="size-6 overflow-visible rounded-full peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink"
@@ -121,15 +113,7 @@ export function TodoItem({ t, todo, today, onToggle, onRemove, onEdit, onPriorit
 
         <div className="min-w-0 flex-1">
           {draft === null ? (
-            <span
-              onClick={() => setDraft(todo.text)}
-              style={{ backgroundSize: highlighted ? '100% 100%' : '0% 100%' }}
-              className={`marker cursor-text break-words leading-snug ${
-                todo.completed ? 'text-ink-2 line-through decoration-2' : ''
-              }`}
-            >
-              {todo.text}
-            </span>
+            <PenText text={todo.text} seed={todo.id} struck={todo.completed} highlighted={highlighted} onClick={() => setDraft(todo.text)} />
           ) : (
             <input
               autoFocus
@@ -148,14 +132,8 @@ export function TodoItem({ t, todo, today, onToggle, onRemove, onEdit, onPriorit
           {(todo.due || todo.project) && (
             <div className="mt-1 flex flex-wrap items-center gap-x-3 font-hand text-[17px] leading-none">
               {todo.due && (
-                <span
-                  className={`inline-flex items-center gap-1 ${
-                    overdue ? 'text-danger' : todo.due === today ? 'text-ok' : 'text-ink-2'
-                  }`}
-                >
-                  <svg {...svg} className="size-3.5">
-                    <path d="M4 5h12v11H4zM4 8.500h12M7 3v3M13 3v3" />
-                  </svg>
+                <span className={`inline-flex items-center gap-1 ${overdue ? 'text-danger' : todo.due === today ? 'text-ok' : 'text-ink-2'}`}>
+                  <CalendarIcon className="size-3.5" />
                   {formatDue(todo.due, today, t.locale, t)}
                 </span>
               )}
@@ -165,42 +143,26 @@ export function TodoItem({ t, todo, today, onToggle, onRemove, onEdit, onPriorit
         </div>
 
         {draft === null && (
-          <div className="relative flex shrink-0 items-center">
-            <button
+          <div className="flex shrink-0 items-center">
+            <motion.button
               type="button"
               aria-pressed={todo.priority === true}
               aria-label={t.flagTask(todo.text)}
               onClick={() => onPriority(todo.id)}
               className={`${iconButton} max-sm:hidden ${todo.priority ? 'text-ink [@media(hover:hover)]:opacity-100' : ''}`}
+              {...hoverProps}
             >
-              <svg {...svg} fill={todo.priority ? 'currentColor' : 'none'}>
-                <path d="M10 2.800l2.200 4.500 4.900.7-3.600 3.400.9 4.900L10 14l-4.400 2.300.9-4.900L2.900 8l4.900-.7L10 2.800z" />
-              </svg>
-            </button>
-            <button type="button" aria-label={t.setDue(todo.text)} onClick={() => dateInput.current?.showPicker?.()} className={iconButton}>
-              <svg {...svg}>
-                <path d="M4 5h12v11H4zM4 8.500h12M7 3v3M13 3v3" />
-              </svg>
-            </button>
-            <input
-              ref={dateInput}
-              type="date"
-              aria-label={t.dueDate}
-              tabIndex={-1}
-              value={todo.due ?? ''}
-              onChange={(e) => onDue(todo.id, e.target.value || null)}
-              className="pointer-events-none absolute size-0 opacity-0"
-            />
-            <button type="button" aria-label={t.editTask(todo.text)} onClick={() => setDraft(todo.text)} className={`${iconButton} max-sm:hidden`}>
-              <svg {...svg}>
-                <path d="M4 16l.8-3.600L13.600 3.600a1.800 1.800 0 012.600 2.600L7.400 15.200 4 16zM12 5.200l2.800 2.800" />
-              </svg>
-            </button>
-            <button type="button" aria-label={t.deleteTask(todo.text)} onClick={() => onRemove(todo.id)} className={iconButton}>
-              <svg {...svg}>
-                <path d="M3.500 5.500h13M8 5.500V3.500h4v2M5.500 5.500l.7 10.500h7.600l.7-10.500M8.500 9v4.500M11.500 9v4.500" />
-              </svg>
-            </button>
+              <StarIcon filled={todo.priority === true} />
+            </motion.button>
+            <DateButton t={t} today={today} value={todo.due} label={t.setDue(todo.text)} onChange={(date) => onDue(todo.id, date)} className={iconButton}>
+              <CalendarIcon />
+            </DateButton>
+            <motion.button type="button" aria-label={t.editTask(todo.text)} onClick={() => setDraft(todo.text)} className={`${iconButton} max-sm:hidden`} {...hoverProps}>
+              <PencilIcon />
+            </motion.button>
+            <motion.button type="button" aria-label={t.deleteTask(todo.text)} onClick={() => onRemove(todo.id)} className={iconButton} {...hoverProps}>
+              <TrashIcon />
+            </motion.button>
           </div>
         )}
       </div>

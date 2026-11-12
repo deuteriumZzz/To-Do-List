@@ -66,6 +66,14 @@
   }
 }
 
+/* highlighter ink with faint pen streaks */
+.highlighter {
+  background-color: var(--color-marker);
+  background-image:
+    repeating-linear-gradient(92deg, rgb(255 255 255 / 0.3) 0 2px, transparent 2px 9px),
+    linear-gradient(180deg, rgb(255 255 255 / 0.35), transparent 45%, rgb(0 0 0 / 0.07));
+}
+
 @media (prefers-reduced-motion: reduce) {
   .marker {
     transition: none;

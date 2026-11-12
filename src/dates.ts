@@ -28,6 +28,13 @@ export function monthGrid(year: number, month: number, weekStartsOn: 0 | 1): ISO
   return Array.from({ length: 42 }, (_, i) => toISO(new Date(year, month, 1 - offset + i)))
 }
 
+/** Short weekday names in calendar order (2023-01-01 is a Sunday). */
+export function weekdayNames(locale: string, weekStartsOn: 0 | 1): string[] {
+  return Array.from({ length: 7 }, (_, i) =>
+    new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(new Date(2023, 0, 1 + weekStartsOn + i)),
+  )
+}
+
 interface DueLabels {
   today: string
   tomorrow: string

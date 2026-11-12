@@ -161,6 +161,29 @@ describe('smart features', () => {
   })
 })
 
+describe('date picker', () => {
+  it('sets a date from the notebook-style picker', async () => {
+    seed({ text: 'Plan trip' })
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Set date: Plan trip' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Due date' })
+    await user.click(within(dialog).getByRole('button', { name: 'Tomorrow' }))
+    await waitForElementToBeRemoved(() => screen.queryByRole('dialog'))
+    expect(screen.getByText('Tomorrow')).toBeInTheDocument()
+  })
+
+  it('closes the picker with Escape', async () => {
+    seed({ text: 'Plan trip' })
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Set date: Plan trip' }))
+    await screen.findByRole('dialog', { name: 'Due date' })
+    await user.keyboard('{Escape}')
+    await waitForElementToBeRemoved(() => screen.queryByRole('dialog'))
+  })
+})
+
 describe('language', () => {
   it('switches to Russian and remembers the choice', async () => {
     const user = userEvent.setup()

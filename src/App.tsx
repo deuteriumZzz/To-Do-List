@@ -121,7 +121,6 @@ export default function App() {
                 project={activeProject}
                 dateLabel={dateLabel}
                 isList={isList}
-                visibleCount={visible.length}
                 done={scope.completed}
                 total={scope.total}
                 search={search}
