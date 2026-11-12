@@ -1,0 +1,12 @@
+/** Brand mark: an orange keycap with an engraved check and a lit LED. */
+export function Logo({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 64 64" aria-hidden="true" className={className}>
+      <rect x="4" y="9" width="56" height="51" rx="14" fill="#b13600" />
+      <rect x="4" y="4" width="56" height="52" rx="14" fill="#ff5b14" />
+      <rect x="10" y="9" width="44" height="38" rx="9" fill="#ff7a3d" />
+      <path d="M20 29l8.5 8.5L44 20" fill="none" stroke="#1c1b19" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="49" cy="14" r="3.6" fill="#2fd26b" stroke="#1c1b19" strokeWidth="1.8" />
+    </svg>
+  )
+}

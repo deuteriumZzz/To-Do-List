@@ -1,7 +1,9 @@
 import { AnimatePresence, animate, motion, useMotionValue, useTransform } from 'motion/react'
-import { useEffect } from 'react'
+import { useEffect, type CSSProperties } from 'react'
 import type { Messages } from '../i18n'
 import { ease, springs } from '../motion'
+
+const LEDS = 12
 
 interface StatsProps {
   t: Messages
@@ -10,9 +12,10 @@ interface StatsProps {
   completed: number
 }
 
+/** LCD digit that rolls to its new value. */
 function Num({ value }: { value: number }) {
   return (
-    <span className="relative inline-flex h-9 overflow-hidden text-3xl font-semibold leading-9 tabular-nums text-ink">
+    <span className="relative inline-flex h-10 overflow-hidden">
       <AnimatePresence mode="popLayout" initial={false}>
         <motion.span
           key={value}
@@ -33,7 +36,7 @@ function Percent({ value }: { value: number }) {
   const mv = useMotionValue(value)
   const text = useTransform(mv, (v) => `${Math.round(v)}%`)
   useEffect(() => {
-    const controls = animate(mv, value, { duration: 0.6, ease: ease })
+    const controls = animate(mv, value, { duration: 0.6, ease })
     return () => controls.stop()
   }, [mv, value])
   return <motion.span>{text}</motion.span>
@@ -41,53 +44,56 @@ function Percent({ value }: { value: number }) {
 
 export function Stats({ t, total, active, completed }: StatsProps) {
   const ratio = total === 0 ? 0 : completed / total
+  const percent = Math.round(ratio * 100)
+  const lit = Math.round(ratio * LEDS)
   const items = [
     { label: t.stats.total, value: total },
     { label: t.stats.active, value: active },
     { label: t.stats.done, value: completed },
   ]
+
   return (
-    <section className="rounded-3xl bg-surface p-5 shadow-card ring-1 ring-line">
-      <div className="flex items-baseline justify-between gap-3 text-sm">
-        <p className="font-medium text-ink">{t.progress(completed, total)}</p>
-        <p className="tabular-nums text-muted">
-          <Percent value={Math.round(ratio * 100)} />
-        </p>
-      </div>
-      <div
-        role="progressbar"
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={Math.round(ratio * 100)}
-        aria-label={t.progress(completed, total)}
-        className="mt-3 h-2 overflow-hidden rounded-full bg-line"
-      >
-        <motion.div
-          initial={false}
-          animate={{ scaleX: ratio }}
-          transition={springs.gentle}
-          className="relative h-full origin-left overflow-hidden rounded-full bg-accent"
-        >
-          {ratio > 0 && (
-            <motion.span
-              aria-hidden="true"
-              animate={{ x: ['-100%', '320%'] }}
-              transition={{ duration: 1.8, ease: 'linear', repeat: Infinity, repeatDelay: 1.4 }}
-              className="absolute inset-y-0 left-0 w-1/3 bg-white/35 blur-sm"
-            />
-          )}
-        </motion.div>
-      </div>
-      <dl className="mt-5 grid grid-cols-3 divide-x divide-line">
-        {items.map((i, idx) => (
-          <div key={i.label} className={idx === 0 ? 'pr-4' : 'px-4'}>
-            <dt className="text-xs font-medium uppercase tracking-wide text-muted">{i.label}</dt>
-            <dd>
+    <section className="flex flex-col gap-3">
+      <dl className="grid grid-cols-3 gap-2.5">
+        {items.map((i) => (
+          <div key={i.label} className="lcd px-3.5 py-3">
+            <dt className="text-[10px] font-medium uppercase tracking-[0.16em] opacity-70">{i.label}</dt>
+            <dd className="relative mt-1 flex h-10 justify-end text-4xl font-medium leading-10 tabular-nums">
+              <span aria-hidden="true" className="absolute right-0 opacity-[0.09]">
+                88
+              </span>
               <Num value={i.value} />
             </dd>
           </div>
         ))}
       </dl>
+
+      <div className="slot flex flex-col gap-2.5 px-4 py-3">
+        <div className="flex items-center justify-between font-mono text-xs font-medium uppercase tracking-wider text-ink-2">
+          <span>{t.progress(completed, total)}</span>
+          <span className="tabular-nums text-ink">
+            <Percent value={percent} />
+          </span>
+        </div>
+        <div
+          role="progressbar"
+          aria-label={t.progress(completed, total)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={percent}
+          className="flex items-center justify-between gap-1"
+        >
+          {Array.from({ length: LEDS }, (_, i) => (
+            <span
+              key={i}
+              className="led led-boot"
+              data-on={i < lit}
+              data-tone="signal"
+              style={{ '--i': i, transitionDelay: `${i * 30}ms` } as CSSProperties}
+            />
+          ))}
+        </div>
+      </div>
     </section>
   )
 }

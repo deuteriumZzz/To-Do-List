@@ -44,6 +44,38 @@ describe('App', () => {
     expect(screen.getByLabelText('Two')).toBeInTheDocument()
   })
 
+  it('edits a task in place and ignores a blank edit', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.type(screen.getByLabelText('New task'), 'Old name{Enter}')
+
+    await user.click(screen.getByRole('button', { name: 'Edit task: Old name' }))
+    await user.clear(screen.getByLabelText('Task text'))
+    await user.type(screen.getByLabelText('Task text'), '  New name  {Enter}')
+    expect(screen.getByLabelText('New name')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Edit task: New name' }))
+    await user.clear(screen.getByLabelText('Task text'))
+    await user.keyboard('{Enter}')
+    expect(screen.getByLabelText('New name')).toBeInTheDocument()
+  })
+
+  it('undoes a deletion from the toast', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.type(screen.getByLabelText('New task'), 'Keep me{Enter}')
+    await user.click(screen.getByRole('button', { name: 'Delete task: Keep me' }))
+    await user.click(await screen.findByRole('button', { name: 'Undo' }))
+    expect(await screen.findByLabelText('Keep me')).toBeInTheDocument()
+  })
+
+  it('focuses the input with the / shortcut', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.keyboard('/')
+    expect(screen.getByLabelText('New task')).toHaveFocus()
+  })
+
   it('switches to Russian and remembers the choice', async () => {
     const user = userEvent.setup()
     const { unmount } = render(<App />)

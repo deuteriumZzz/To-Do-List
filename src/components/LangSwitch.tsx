@@ -8,9 +8,10 @@ interface LangSwitchProps {
   onChange: (lang: Lang) => void
 }
 
+/** Two-position rocker: the raised half is the active language. */
 export function LangSwitch({ value, label, onChange }: LangSwitchProps) {
   return (
-    <div role="group" aria-label={label} className="relative inline-flex rounded-full bg-line/70 p-0.5">
+    <div role="group" aria-label={label} className="slot relative inline-flex rounded-xl p-1">
       {LANGS.map((lang) => (
         <button
           key={lang}
@@ -18,16 +19,12 @@ export function LangSwitch({ value, label, onChange }: LangSwitchProps) {
           lang={lang}
           aria-pressed={value === lang}
           onClick={() => onChange(lang)}
-          className={`relative rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide transition-colors focus-visible:outline-2 focus-visible:outline-accent ${
-            value === lang ? 'text-ink' : 'text-muted hover:text-ink'
+          className={`relative rounded-lg px-3 py-1 font-mono text-xs font-medium uppercase tracking-wider transition-colors ${
+            value === lang ? 'text-ink' : 'text-ink-2 hover:text-ink'
           }`}
         >
           {value === lang && (
-            <motion.span
-              layoutId="lang-pill"
-              transition={springs.snappy}
-              className="absolute inset-0 rounded-full bg-surface shadow-sm"
-            />
+            <motion.span layoutId="lang-key" transition={springs.snappy} className="plate absolute inset-0 rounded-lg" />
           )}
           <span className="relative">{lang}</span>
         </button>

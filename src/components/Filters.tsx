@@ -1,6 +1,4 @@
-import { motion } from 'motion/react'
 import type { Messages } from '../i18n'
-import { springs } from '../motion'
 import type { Filter } from '../todos'
 
 const ORDER: Filter[] = ['all', 'active', 'completed']
@@ -12,28 +10,21 @@ interface FiltersProps {
   onChange: (f: Filter) => void
 }
 
+/** Three interlocked push-keys: the selected one stays pressed with its LED lit. */
 export function Filters({ t, value, counts, onChange }: FiltersProps) {
   return (
-    <div role="group" aria-label={t.filterGroup} className="flex w-full gap-1 rounded-2xl bg-line/70 p-1 sm:w-auto">
+    <div role="group" aria-label={t.filterGroup} className="grid flex-1 grid-cols-3 gap-2">
       {ORDER.map((f) => (
         <button
           key={f}
           type="button"
           aria-pressed={value === f}
           onClick={() => onChange(f)}
-          className={`relative flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-accent sm:flex-none sm:px-4 ${
-            value === f ? 'text-ink' : 'text-muted hover:text-ink'
-          }`}
+          className="key flex min-w-0 flex-col items-center justify-center gap-0.5 px-1.5 py-2 text-[13px] font-semibold sm:flex-row sm:gap-2 sm:px-2 sm:py-2.5 sm:text-sm"
         >
-          {value === f && (
-            <motion.span
-              layoutId="filter-pill"
-              transition={springs.snappy}
-              className="absolute inset-0 rounded-xl bg-surface shadow-sm"
-            />
-          )}
-          <span className="relative">{t.filters[f]}</span>
-          <span aria-hidden="true" className="relative text-xs tabular-nums text-muted">
+          <span className="led hidden sm:inline-block" data-on={value === f} data-tone="signal" aria-hidden="true" />
+          <span className="max-w-full truncate">{t.filters[f]}</span>
+          <span aria-hidden="true" className="font-mono text-xs font-medium tabular-nums text-ink-2">
             {counts[f]}
           </span>
         </button>
