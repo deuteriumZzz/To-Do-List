@@ -5,7 +5,7 @@ import { PALETTE } from '../palette'
 const COLORS = ['#141413', PALETTE.yellow, PALETTE.pink, PALETTE.green, PALETTE.sky, PALETTE.orange]
 
 /** One-shot burst of tiny square sparks from the centre of the parent. */
-export function Burst({ count = 10, radius = 34 }: { count?: number; radius?: number }) {
+export function Burst({ count = 10, radius = 34, delay = 0 }: { count?: number; radius?: number; delay?: number }) {
   return (
     <span aria-hidden="true" className="pointer-events-none absolute left-1/2 top-1/2">
       {Array.from({ length: count }, (_, i) => {
@@ -14,9 +14,9 @@ export function Burst({ count = 10, radius = 34 }: { count?: number; radius?: nu
         return (
           <motion.span
             key={i}
-            initial={{ x: 0, y: 0, opacity: 1, scale: 1, rotate: 0 }}
-            animate={{ x: Math.cos(angle) * reach, y: Math.sin(angle) * reach, opacity: 0, scale: 0.4, rotate: i * 60 }}
-            transition={{ duration: 0.65, ease }}
+            initial={{ x: 0, y: 0, opacity: 0, scale: 1, rotate: 0 }}
+            animate={{ x: Math.cos(angle) * reach, y: Math.sin(angle) * reach, opacity: [1, 0], scale: 0.4, rotate: i * 60 }}
+            transition={{ duration: 0.65, ease, delay }}
             style={{ background: COLORS[i % COLORS.length] }}
             className="absolute -ml-[3px] -mt-[3px] block size-[6px] rounded-[1px]"
           />

@@ -30,6 +30,27 @@ interface TodoItemProps extends ItemHandlers {
   writing?: boolean
 }
 
+/** The pen that inks the tick: it follows the three points of the tick while the stroke is drawn. */
+function CheckPen() {
+  const xs = [7.4, 10.7, 17.9].map((v) => v - 3)
+  const ys = [12.6, 16.1, 8.5].map((v) => v - 21)
+  const line = { times: [0, 0.31, 1], duration: 0.45, ease: 'linear' as const }
+  return (
+    <motion.svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      initial={{ x: xs[0], y: ys[0], opacity: 0 }}
+      animate={{ x: xs, y: ys, opacity: [0, 1, 1, 0] }}
+      transition={{ x: line, y: line, opacity: { times: [0, 0.08, 0.85, 1], duration: 0.65, ease: 'linear' } }}
+      className="pointer-events-none absolute left-0 top-0 z-10 size-6 drop-shadow-[0_1px_1px_rgb(0_0_0/0.3)]"
+    >
+      <path d="M3 21l1.6-5.2L16 4.4a2.2 2.2 0 013.1 3.1L7.8 19.4 3 21Z" fill="#141413" />
+      <path d="M14.4 6l3.6 3.6" stroke="#ffe14d" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M3 21l1.6-5.2 3.6 3.6L3 21Z" fill="#ffe14d" />
+    </motion.svg>
+  )
+}
+
 const iconButton =
   'grid size-8 shrink-0 place-items-center rounded-lg text-ink-2 transition-colors hover:bg-ink/10 hover:text-ink focus-visible:opacity-100 group-focus-within:opacity-100 [@media(hover:hover)]:opacity-35 [@media(hover:hover)]:group-hover:opacity-100'
 
@@ -38,6 +59,12 @@ const SWIPE_DISTANCE = 96
 
 export function TodoItem({ t, todo, today, peek = false, writing = false, onToggle, onRemove, onEdit, onPriority, onDue, onTime }: TodoItemProps) {
   const [burst, setBurst] = useState(0)
+  // however a task gets completed (checkbox, swipe), the pen draws the tick
+  const [wasDone, setWasDone] = useState(todo.completed)
+  if (todo.completed !== wasDone) {
+    setWasDone(todo.completed)
+    if (todo.completed) setBurst((b) => b + 1)
+  }
   const [draft, setDraft] = useState<string | null>(null)
   const highlighted = todo.priority === true && !todo.completed
   const overdue = isOverdue(todo, today)
@@ -113,10 +140,7 @@ export function TodoItem({ t, todo, today, peek = false, writing = false, onTogg
             aria-label={todo.text}
             checked={todo.completed}
             onChange={() => {
-              if (!todo.completed) {
-                setBurst((b) => b + 1)
-                navigator.vibrate?.(12)
-              }
+              if (!todo.completed) navigator.vibrate?.(12)
               onToggle(todo.id)
             }}
             className="peer sr-only"
@@ -157,10 +181,11 @@ export function TodoItem({ t, todo, today, peek = false, writing = false, onTogg
               fill="none"
               initial={false}
               animate={{ pathLength: todo.completed ? 1 : 0, opacity: todo.completed ? 1 : 0 }}
-              transition={{ duration: 0.28 }}
+              transition={{ duration: todo.completed ? 0.45 : 0.15, ease: 'linear' }}
             />
           </motion.svg>
-          {burst > 0 && <Burst key={burst} />}
+          {burst > 0 && <CheckPen key={`pen-${burst}`} />}
+          {burst > 0 && <Burst key={burst} delay={0.45} />}
         </label>
 
         <div className="min-w-0 flex-1">

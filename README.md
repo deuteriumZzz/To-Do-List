@@ -77,7 +77,7 @@ Most task apps are either bare checklists or dense dashboards. Tickle tries a th
 **Feel**
 - **Tick**, the mascot: a check mark with one eye that follows your pointer and hops when you finish a task
 - Task titles are set in our handwriting, and a new task is **written out with a pen** that travels along the line
-- Hand-drawn checkboxes, completed tasks crossed out by an uneven pen stroke that is drawn across the text
+- Hand-drawn checkboxes: completing a task makes a pen ink the tick, then cross the title out with an uneven stroke, line by line
 - Every icon has its own hover animation (the bin lifts its lid, the pencil writes, the calendar flips)
 - Swipe a task **left to delete** or **right to complete**: a coloured patch shows what will happen, the first task demonstrates the gesture once on touch screens, and a handwritten hint sits under the list
 - Responsive layout (sidebar on desktop, top bar on phones); animation respects `prefers-reduced-motion`

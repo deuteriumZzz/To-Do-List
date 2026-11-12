@@ -42,6 +42,9 @@ function strokePath(x: number, y: number, width: number, rand: () => number): st
   return `${d}L${pts[steps][0].toFixed(1)} ${pts[steps][1].toFixed(1)}`
 }
 
+/** Seconds to wait before crossing out, so the pen has finished inking the tick first. */
+const STRIKE_DELAY = 0.5
+
 /** Tasks whose writing animation has already played in this session. */
 const written = new Set<string>()
 
@@ -89,6 +92,13 @@ export function PenText({ text, seed, struck, highlighted, writing = false, onCl
   const box = useRef<HTMLSpanElement>(null)
   const label = useRef<HTMLSpanElement>(null)
   const [lines, setLines] = useState<Line[]>([])
+  // the pen crosses the title out whenever it becomes struck
+  const [wasStruck, setWasStruck] = useState(struck)
+  const [strikeKey, setStrikeKey] = useState(0)
+  if (struck !== wasStruck) {
+    setWasStruck(struck)
+    if (struck) setStrikeKey((k) => k + 1)
+  }
   const [progress, setProgress] = useState(() =>
     writing && typeof ResizeObserver !== 'undefined' && !written.has(seed) && !reduce ? 0 : 1,
   )
@@ -135,6 +145,30 @@ export function PenText({ text, seed, struck, highlighted, writing = false, onCl
     return () => controls.stop()
   }, [writing, ready, seed, text.length, reduce])
 
+  // strike lines are drawn one after another, after the tick has been inked
+  const schedule = lines.reduce<{ delay: number; duration: number }[]>((acc, l) => {
+    const prev = acc[acc.length - 1]
+    return [...acc, { delay: prev ? prev.delay + prev.duration + 0.05 : STRIKE_DELAY, duration: 0.2 + l.width / 900 }]
+  }, [])
+
+  const strikePen = (() => {
+    if (!ready || strikeKey === 0 || !struck || reduce) return null
+    const total = Math.max(...schedule.map((s) => s.delay + s.duration))
+    const xs: number[] = []
+    const ys: number[] = []
+    const times: number[] = []
+    lines.forEach((l, i) => {
+      const y = l.top + l.height * 0.56
+      xs.push(l.left - 3, l.left + l.width + 4)
+      ys.push(y, y)
+      times.push(schedule[i].delay / total, (schedule[i].delay + schedule[i].duration) / total)
+    })
+    xs.unshift(xs[0])
+    ys.unshift(ys[0])
+    times.unshift(0)
+    return { xs: xs.map((v) => v - 3.5), ys: ys.map((v) => v - 24.5), times, total }
+  })()
+
   const inProgress = progress < 1
   const tip = inProgress && ready ? penTip(lines, progress) : null
 
@@ -164,14 +198,33 @@ export function PenText({ text, seed, struck, highlighted, writing = false, onCl
               initial={false}
               animate={{ pathLength: struck ? 1 : 0, opacity: struck ? 0.9 : 0 }}
               transition={{
-                duration: struck ? 0.2 + line.width / 900 : 0.12,
-                delay: struck ? i * 0.14 : 0,
-                ease: 'easeOut',
+                duration: struck ? (schedule[i]?.duration ?? 0.3) : 0.12,
+                delay: struck ? (schedule[i]?.delay ?? 0) : 0,
+                ease: 'linear',
               }}
             />
           ))}
         </svg>
       </span>
+      {strikePen && (
+        <motion.svg
+          key={`strike-${strikeKey}`}
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          initial={{ opacity: 0 }}
+          animate={{ x: strikePen.xs, y: strikePen.ys, opacity: [0, 1, 1, 0] }}
+          transition={{
+            x: { times: strikePen.times, duration: strikePen.total, ease: 'linear' },
+            y: { times: strikePen.times, duration: strikePen.total, ease: 'linear' },
+            opacity: { times: [0, strikePen.times[1], 0.96, 1], duration: strikePen.total + 0.2, ease: 'linear' },
+          }}
+          className="pointer-events-none absolute left-0 top-0 z-10 size-7 drop-shadow-[0_2px_2px_rgb(0_0_0/0.25)]"
+        >
+          <path d="M3 21l1.6-5.2L16 4.4a2.2 2.2 0 013.1 3.1L7.8 19.4 3 21Z" fill="#141413" />
+      <path d="M14.4 6l3.6 3.6" stroke="#ffe14d" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M3 21l1.6-5.2 3.6 3.6L3 21Z" fill="#ffe14d" />
+        </motion.svg>
+      )}
       {tip && (
         <svg
           aria-hidden="true"
